@@ -2,3 +2,15 @@
 title: "Project"
 ---
 
+```{r setup}
+library(readxl)
+```
+
+```{r data}
+temp = tempfile(fileext = '.xlsx')
+dataURL <- "https://github.com/lrsulli/GovAnalytics/blob/master/Data/fp_survey_2_15_13.xlsx"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+data = read_excel(temp, sheet = 1)
+```
+
