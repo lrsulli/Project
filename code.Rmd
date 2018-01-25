@@ -3,19 +3,176 @@ title: "Project"
 ---
 
 ```{r Setup}
+# Libraries
 library(readxl)
+library(dplyr)
+library(moments)
+library(stringr)
+library(scales)
+library(ggplot2)
+
+# Functions
+getMode = function(aColumn){
+  freqTable=table(aColumn)
+  maxFrequency=max(freqTable)
+  names(freqTable[freqTable==maxFrequency])
+}
 ```
 
-```{r Data}
+```{r Import Data}
+# Initial data set from 2_15_13
 temp = tempfile(fileext = '.xlsx')
 dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/fp_survey_2_15_13.xlsx"
 download.file(dataURL, destfile = temp, mode = 'wb')
 
-data = read_excel(temp, sheet = 1)
-head(data,4)
+data_initial = read_excel(temp, sheet = 1)
+head(data_initial,4)
+
+# New responses from 5_20_13
+temp = tempfile(fileext = '.xlsx')
+dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/new_responses_5_20_13.xlsx"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+data_new = read_excel(temp, sheet = 1)
+head(data_new,4)
+
+# Recode file for Q12 and Q22 to Q25
+temp = tempfile(fileext = '.xlsx')
+dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/recode_Q12_Q22toQ25.xlsx"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+data_recode = read_excel(temp, sheet = 1)
+head(data_recode,4)
+
+# Address list data file
+temp = tempfile(fileext = '.xlsx')
+dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/address_list_5_20_13.xlsx"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+data_address = read_excel(temp, sheet = 1)
+head(data_address,4)
 ```
 
-```{r Rename}
-
+```{r Append Data}
+# Add new responses to intiial data set
+append(data_initial, data_new)
 ```
 
+```{r Merge Data}
+# Prepare recode file
+names(data_recode)
+data_recode = data_recode[,c(1,5:6,14:15,19:20)]
+names(data_recode)[1] <- "STUDYID"
+head(data_recode,4)
+
+# Merge recode file with initial data set
+data = merge(data_initial, data_recode, by="STUDYID")
+
+# Prepare address list file
+names(data_address)[1] <- "STUDYID"
+head(data_address,4)
+
+# Merge address list
+data = merge(data, data_address, by="STUDYID")
+
+data = data.frame(data)
+```
+
+```{r Rename Variables}
+names(data)
+
+names(data)[17] <- "meals"
+names(data)[24] <- "groceries"
+names(data)[34] <- "food_ben" #Offers food-related benefits
+names(data)[56] <- "nonfood_ben" #OFfer non-food related benefits
+names(data)[187] <- "clients"
+```
+
+EXPLORING DICHOTOMOUS DATA
+
+Meal Programs
+
+```{r Meals}
+# Distribution of values
+table(data$meals)
+
+# Relative Frequencies
+prop.table(table(data$meals))
+
+# Are the difference significant?
+distribution = table(data$meals)
+chisq.test(distribution)
+
+# Central measurement and dispersion
+getMode(data$meals)
+```
+
+Groceries
+
+```{r Groceries}
+# Distribution of values
+table(data$groceries)
+
+# Relative Frequencies
+prop.table(table(data$groceries))
+
+# Are the difference significant?
+distribution = table(data$groceries)
+chisq.test(distribution)
+
+# Central measurement and dispersion
+getMode(data$groceries)
+```
+
+Food Related Benefits
+
+```{r Food Benefits}
+# Distribution of values
+table(data$food_ben)
+
+# Relative Frequencies
+prop.table(table(data$food_ben))
+
+# Are the difference significant?
+distribution = table(data$food_ben)
+chisq.test(distribution)
+
+# Central measurement and dispersion
+getMode(data$food_ben)
+```
+
+Non-Food Related Benefits
+
+```{r Non-Food Benefits}
+# Distribution of values
+table(data$nonfood_ben)
+
+# Relative Frequencies
+prop.table(table(data$nonfood_ben))
+
+# Are the difference significant?
+distribution = table(data$nonfood_ben)
+chisq.test(distribution)
+
+# Central measurement and dispersion
+getMode(data$nonfood_ben)
+```
+
+EXPLORING COUNT VARIABLES
+
+Average Number of Clients Served per Month
+
+```{r Clients}
+# Centrality
+summary(data$clients)
+
+# Skewness
+skewness(data$clients, na.rm = T)
+
+# Kurtosis
+kurtosis(data$clients, na.rm = T)
+
+# Histogram
+hist(data$clients)
+hist(log(data$clients))
+```
