@@ -1,5 +1,5 @@
 ---
-title: "Project"
+title: "Final Project"
 last updated: 2/1/18
 ---
 
@@ -13,8 +13,7 @@ library(moments)
 library(stringr)
 library(scales)
 library(ggplot2)
-library(devtools)
-devtools::install_github('jbryer/DataCache')
+
 
 # Functions
 getMode = function(aColumn){
@@ -32,16 +31,6 @@ download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_initial = read_excel(temp, sheet = 1)
 head(data_initial,4)
-```
-
-```{r Import Data: New Responses}
-# New responses from 5_20_13
-temp = tempfile(fileext = '.xlsx')
-dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/new_responses_5_20_13.xlsx"
-download.file(dataURL, destfile = temp, mode = 'wb')
-
-data_new = read_excel(temp, sheet = 1)
-head(data_new,4)
 ```
 
 ```{r Import Data: Recodes}
@@ -62,11 +51,6 @@ download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_address = read_excel(temp, sheet = 1)
 head(data_address,4)
-```
-
-```{r Append New Responses}
-# Add new responses to intiial data set
-append(data_initial, data_new)
 ```
 
 ```{r Merge Data: Recodes}
