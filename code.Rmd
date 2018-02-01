@@ -119,7 +119,7 @@ names(data)[63] <- "counseling"
 names(data)[64] <- "trans" #Transportation assistance
 names(data)[65] <- "cloth" #Clothing or furniture
 names(data)[66] <- "ref" #Referrals to other programs
-names(data)[67] <- "medicaid" #MEdicaid or CHIP
+names(data)[67] <- "medicaid" #Medicaid or CHIP
 names(data)[68] <- "money" #Financial, tax prep, budgeting
 names(data)[69] <- "nonfood_ben_other"
 
