@@ -1,5 +1,6 @@
 ---
 title: "Project"
+output: html_notebook
 last updated: 2/1/18
 ---
 
