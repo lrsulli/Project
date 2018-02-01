@@ -14,7 +14,6 @@ library(stringr)
 library(scales)
 library(ggplot2)
 
-
 # Functions
 getMode = function(aColumn){
   freqTable=table(aColumn)
@@ -80,10 +79,51 @@ names(data)
 ```
 
 ```{r Rename Variables}
+
+# Rename types of meal programs
 names(data)[17] <- "meals"
+names(data)[18] <- "hot_meals"
+names(data)[19] <- "home_meals" #Home delivered meals
+names(data)[20] <- "community_kitchen"
+names(data)[21] <- "child_meals"
+names(data)[22] <- "meal_other"
+
+# Rename types of grocery programs
 names(data)[24] <- "groceries"
+names(data)[25] <- "pantry"
+names(data)[26] <- "backpack"
+names(data)[27] <- "home_groceries" #Home delivered groceries
+names(data)[28] <- "mobile_pantry"
+names(data)[29] <- "mobile_market"
+names(data)[30] <- "supply_other" #Supply food to other programs
+names(data)[31] <- "community_garden"
+names(data)[32] <- "groceries_other"
+
+# Rename types of food related benefit programs
 names(data)[34] <- "food_ben" #Offers food-related benefits
+names(data)[35] <- "snap"
+names(data)[36] <- "wic"
+names(data)[37] <- "school" #School lunch or breakfast
+names(data)[38] <- "git" #Gift car or voucher
+names(data)[39] <- "food_ben_other"
+
+# Rename types of non-food related benefit programs
 names(data)[56] <- "nonfood_ben" #Offers non-food related benefits
+names(data)[57] <- "job" #Job training or assistance
+names(data)[58] <- "house" #Housing assistance
+names(data)[59] <- "utility"
+names(data)[60] <- "legal"
+names(data)[61] <- "educ" #GED or education assistance
+names(data)[62] <- "health"
+names(data)[63] <- "counseling"
+names(data)[64] <- "trans" #Transportation assistance
+names(data)[65] <- "cloth" #Clothing or furniture
+names(data)[66] <- "ref" #Referrals to other programs
+names(data)[67] <- "medicaid" #MEdicaid or CHIP
+names(data)[68] <- "money" #Financial, tax prep, budgeting
+names(data)[69] <- "nonfood_ben_other"
+
+# Rename number of clients served per month
 names(data)[187] <- "clients"
 ```
 
