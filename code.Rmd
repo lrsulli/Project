@@ -1,5 +1,6 @@
 ---
 title: "Project"
+last updated: 2/1/18
 ---
 
 ```{r Setup}
@@ -84,7 +85,7 @@ names(data)
 names(data)[17] <- "meals"
 names(data)[24] <- "groceries"
 names(data)[34] <- "food_ben" #Offers food-related benefits
-names(data)[56] <- "nonfood_ben" #OFfer non-food related benefits
+names(data)[56] <- "nonfood_ben" #Offers non-food related benefits
 names(data)[187] <- "clients"
 ```
 
