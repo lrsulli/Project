@@ -3,6 +3,8 @@ title: "Project"
 last updated: 2/1/18
 ---
 
+## FINAL PROJECT
+
 ```{r Setup}
 # Libraries
 library(readxl)
@@ -11,6 +13,8 @@ library(moments)
 library(stringr)
 library(scales)
 library(ggplot2)
+library(devtools)
+devtools::install_github('jbryer/DataCache')
 
 # Functions
 getMode = function(aColumn){
@@ -99,9 +103,9 @@ names(data)[56] <- "nonfood_ben" #Offers non-food related benefits
 names(data)[187] <- "clients"
 ```
 
-EXPLORING DICHOTOMOUS DATA
+### EXPLORING DICHOTOMOUS DATA
 
-Meal Programs
+#### Meal Programs
 
 ```{r Meals: Distribution}
 # Distribution of values
@@ -124,7 +128,7 @@ chisq.test(distribution)
 getMode(data$meals)
 ```
 
-Groceries
+#### Groceries
 
 ```{r Groceries: Distribution}
 # Distribution of values
@@ -147,7 +151,7 @@ chisq.test(distribution)
 getMode(data$groceries)
 ```
 
-Food Related Benefits
+#### Food Related Benefits
 
 ```{r Food Benefits: Distribution}
 # Distribution of values
@@ -170,7 +174,7 @@ chisq.test(distribution)
 getMode(data$food_ben)
 ```
 
-Non-Food Related Benefits
+#### Non-Food Related Benefits
 
 ```{r Non-Food Benefits: Distribution}
 # Distribution of values
@@ -193,9 +197,9 @@ chisq.test(distribution)
 getMode(data$nonfood_ben)
 ```
 
-EXPLORING COUNT VARIABLES
+### EXPLORING COUNT VARIABLES
 
-Average Number of Clients Served per Month
+#### Average Number of Clients Served per Month
 
 ```{r Clients: Centrality}
 # Centrality
