@@ -1,6 +1,8 @@
 ---
 title: "Project"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 last updated: 2/1/18
 ---
 
@@ -21,7 +23,7 @@ getMode = function(aColumn){
 }
 ```
 
-```{r Import Data}
+```{r Import Data: Initial}
 # Initial data set from 2_15_13
 temp = tempfile(fileext = '.xlsx')
 dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/fp_survey_2_15_13.xlsx"
@@ -29,7 +31,9 @@ download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_initial = read_excel(temp, sheet = 1)
 head(data_initial,4)
+```
 
+```{r Import Data: New Responses}
 # New responses from 5_20_13
 temp = tempfile(fileext = '.xlsx')
 dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/new_responses_5_20_13.xlsx"
@@ -37,7 +41,9 @@ download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_new = read_excel(temp, sheet = 1)
 head(data_new,4)
+```
 
+```{r Import Data: Recodes}
 # Recode file for Q12 and Q22 to Q25
 temp = tempfile(fileext = '.xlsx')
 dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/recode_Q12_Q22toQ25.xlsx"
@@ -45,7 +51,9 @@ download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_recode = read_excel(temp, sheet = 1)
 head(data_recode,4)
+```
 
+```{r Import Data: Addresses}
 # Address list data file
 temp = tempfile(fileext = '.xlsx')
 dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/address_list_5_20_13.xlsx"
@@ -55,12 +63,12 @@ data_address = read_excel(temp, sheet = 1)
 head(data_address,4)
 ```
 
-```{r Append Data}
+```{r Append New Responses}
 # Add new responses to intiial data set
 append(data_initial, data_new)
 ```
 
-```{r Merge Data}
+```{r Merge Data: Recodes}
 # Prepare recode file
 names(data_recode)
 data_recode = data_recode[,c(1,5:6,14:15,19:20)]
@@ -69,7 +77,9 @@ head(data_recode,4)
 
 # Merge recode file with initial data set
 data = merge(data_initial, data_recode, by="STUDYID")
+```
 
+```{r Merge Data: Addresses}
 # Prepare address list file
 names(data_address)[1] <- "STUDYID"
 head(data_address,4)
@@ -80,9 +90,11 @@ data = merge(data, data_address, by="STUDYID")
 data = data.frame(data)
 ```
 
-```{r Rename Variables}
+```{r Check Variable Names}
 names(data)
+```
 
+```{r Rename Variables}
 names(data)[17] <- "meals"
 names(data)[24] <- "groceries"
 names(data)[34] <- "food_ben" #Offers food-related benefits
@@ -94,68 +106,92 @@ EXPLORING DICHOTOMOUS DATA
 
 Meal Programs
 
-```{r Meals}
+```{r Meals: Distribution}
 # Distribution of values
 table(data$meals)
+```
 
+```{r Meals: Frequencies}
 # Relative Frequencies
 prop.table(table(data$meals))
+```
 
+```{r Meals: Chi Square}
 # Are the difference significant?
 distribution = table(data$meals)
 chisq.test(distribution)
+```
 
+```{r Meals: Central Measure}
 # Central measurement and dispersion
 getMode(data$meals)
 ```
 
 Groceries
 
-```{r Groceries}
+```{r Groceries: Distribution}
 # Distribution of values
 table(data$groceries)
+```
 
+```{r Groceries: Frequencies}
 # Relative Frequencies
 prop.table(table(data$groceries))
+```
 
+```{r Groceries: Chi Square}
 # Are the difference significant?
 distribution = table(data$groceries)
 chisq.test(distribution)
+```
 
+```{r Groceries: Central Measure}
 # Central measurement and dispersion
 getMode(data$groceries)
 ```
 
 Food Related Benefits
 
-```{r Food Benefits}
+```{r Food Benefits: Distribution}
 # Distribution of values
 table(data$food_ben)
+```
 
+```{r Food Benefits: Frequencies}
 # Relative Frequencies
 prop.table(table(data$food_ben))
+```
 
+```{r Food Benefits: Chi Square}
 # Are the difference significant?
 distribution = table(data$food_ben)
 chisq.test(distribution)
+```
 
+```{r Food Benefits: Central Measure}
 # Central measurement and dispersion
 getMode(data$food_ben)
 ```
 
 Non-Food Related Benefits
 
-```{r Non-Food Benefits}
+```{r Non-Food Benefits: Distribution}
 # Distribution of values
 table(data$nonfood_ben)
+```
 
+```{r Non-Food Benefits: Frequencies}
 # Relative Frequencies
 prop.table(table(data$nonfood_ben))
+```
 
+```{r Non-Food Benefits: Chi Square}
 # Are the difference significant?
 distribution = table(data$nonfood_ben)
 chisq.test(distribution)
+```
 
+```{r Non-Food Benefits: Central Measure}
 # Central measurement and dispersion
 getMode(data$nonfood_ben)
 ```
@@ -164,16 +200,22 @@ EXPLORING COUNT VARIABLES
 
 Average Number of Clients Served per Month
 
-```{r Clients}
+```{r Clients: Centrality}
 # Centrality
 summary(data$clients)
+```
 
+```{r Clients: Skewness}
 # Skewness
 skewness(data$clients, na.rm = T)
+```
 
+```{r Clients: Kurtosis}
 # Kurtosis
 kurtosis(data$clients, na.rm = T)
+```
 
+```{r Clients: Histogram}
 # Histogram
 hist(data$clients)
 hist(log(data$clients))
