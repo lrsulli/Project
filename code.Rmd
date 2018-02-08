@@ -13,6 +13,9 @@ library(moments)
 library(stringr)
 library(scales)
 library(ggplot2)
+library(jsonlite)
+library(utils)
+library(rgdal)
 
 # Functions
 getMode = function(aColumn){
@@ -245,3 +248,40 @@ kurtosis(data$clients, na.rm = T)
 hist(data$clients)
 hist(log(data$clients))
 ```
+
+### Mapping
+
+```{r}
+compressedMap= "https://github.com/lrsulli/Project/raw/master/2010_Census_Tracts_v17a.zip"
+```
+
+```{r}
+temp=tempfile()
+download.file(compressedMap, temp)
+unzip(temp)
+```
+
+```{r}
+(maps = list.files(pattern = 'shp'))
+```
+
+```{r}
+tractMap <- rgdal::readOGR("2010_Census_Tracts_v17a.shp", stringsAsFactors=F)
+```
+
+```{r}
+names(tractMap)
+```
+
+```{r}
+str(tractMap$NAME)
+```
+
+```{r}
+tractMap$NAME=as.numeric(tractMap$NAME)
+```
+
+```{r}
+plot(tractMap,col='black')
+```
+
