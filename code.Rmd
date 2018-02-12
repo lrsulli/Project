@@ -16,6 +16,7 @@ library(ggplot2)
 library(jsonlite)
 library(utils)
 library(rgdal)
+library(readstata13)
 
 # Functions
 getMode = function(aColumn){
@@ -77,57 +78,150 @@ data = merge(data, data_address, by="STUDYID")
 data = data.frame(data)
 ```
 
+```{r Import Data: Census 1}
+# First census data file
+temp = tempfile(fileext = '.dta')
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_17.dta"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+data_census1 = read.dta13(temp)
+head(data_census1,4)
+```
+
+```{r Merge Data: Census 1}
+data = merge(data, data_census1, by="STUDYID")
+
+data = data.frame(data)
+```
+
+```{r Import Data: Census 2}
+# Second census data file
+temp = tempfile(fileext = '.dta')
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Census_Data%204_28_17.dta"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+data_census2 = read.dta13(temp)
+head(data_census2,4)
+```
+
+```{r Merge Data: Census 2}
+data = merge(data, data_census2, by="tr10fips")
+
+data = data.frame(data)
+```
+
+```{r Import Data: Census 3}
+# Third census data file
+temp = tempfile(fileext = '.dta')
+dataURL<-"https://github.com/lrsulli/Project/raw/master/tract10detroit_povertypop_123mile.dta"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+data_census3 = read.dta13(temp)
+head(data_census3,4)
+```
+
+```{r Merge Data: Census 3}
+data = merge(data, data_census3, by="tr10fips")
+
+data = data.frame(data)
+```
+
 ```{r Check Variable Names}
 names(data)
 ```
 
+```{r Drop Variables}
+# Create a copy of original data set
+data_copy = data
+
+# Only keep needed variables
+data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','povpop10071','povpopd71','povpop_1m',"povpopd711mile","povpop_3m","povpopd713mile","nhwht71","pop71","nhwht711mile","nhwht713mile","blk71","blk711mile","blk713mile","hsp71","hsp711mile","hsp713mile","hhsnapfam271","hhsnapfam171","hhsnapfam2711mile","hh711mile","hhsnapfam2713mile","hh713mile")]
+```
+
 ```{r Rename Variables}
+names(data)
+
+# Rename identification variables
+names(data)[1] <- "tract"
+names(data)[2] <- "id"
 
 # Rename types of meal programs
-names(data)[17] <- "meals"
-names(data)[18] <- "hot_meals"
-names(data)[19] <- "home_meals" #Home delivered meals
-names(data)[20] <- "community_kitchen"
-names(data)[21] <- "child_meals"
-names(data)[22] <- "meal_other"
+names(data)[3] <- "meals"
+names(data)[4] <- "hot_meals"
+names(data)[5] <- "home_meals" #Home delivered meals
+names(data)[6] <- "community_kitchen"
+names(data)[7] <- "child_meals"
+names(data)[8] <- "meal_other"
 
 # Rename types of grocery programs
-names(data)[24] <- "groceries"
-names(data)[25] <- "pantry"
-names(data)[26] <- "backpack"
-names(data)[27] <- "home_groceries" #Home delivered groceries
-names(data)[28] <- "mobile_pantry"
-names(data)[29] <- "mobile_market"
-names(data)[30] <- "supply_other" #Supply food to other programs
-names(data)[31] <- "community_garden"
-names(data)[32] <- "groceries_other"
+names(data)[9] <- "groceries"
+names(data)[10] <- "pantry"
+names(data)[11] <- "backpack"
+names(data)[12] <- "home_groceries" #Home delivered groceries
+names(data)[13] <- "mobile_pantry"
+names(data)[14] <- "mobile_market"
+names(data)[15] <- "supply_other" #Supply food to other programs
+names(data)[16] <- "community_garden"
+names(data)[17] <- "groceries_other"
 
 # Rename types of food related benefit programs
-names(data)[34] <- "food_ben" #Offers food-related benefits
-names(data)[35] <- "snap"
-names(data)[36] <- "wic"
-names(data)[37] <- "school" #School lunch or breakfast
-names(data)[38] <- "git" #Gift car or voucher
-names(data)[39] <- "food_ben_other"
+names(data)[18] <- "food_ben" #Offers food-related benefits
+names(data)[19] <- "snap"
+names(data)[20] <- "wic"
+names(data)[21] <- "school" #School lunch or breakfast
+names(data)[22] <- "git" #Gift car or voucher
+names(data)[23] <- "food_ben_other"
 
 # Rename types of non-food related benefit programs
-names(data)[56] <- "nonfood_ben" #Offers non-food related benefits
-names(data)[57] <- "job" #Job training or assistance
-names(data)[58] <- "house" #Housing assistance
-names(data)[59] <- "utility"
-names(data)[60] <- "legal"
-names(data)[61] <- "educ" #GED or education assistance
-names(data)[62] <- "health"
-names(data)[63] <- "counseling"
-names(data)[64] <- "trans" #Transportation assistance
-names(data)[65] <- "cloth" #Clothing or furniture
-names(data)[66] <- "ref" #Referrals to other programs
-names(data)[67] <- "medicaid" #Medicaid or CHIP
-names(data)[68] <- "money" #Financial, tax prep, budgeting
-names(data)[69] <- "nonfood_ben_other"
+names(data)[24] <- "nonfood_ben" #Offers non-food related benefits
+names(data)[25] <- "job" #Job training or assistance
+names(data)[26] <- "house" #Housing assistance
+names(data)[27] <- "utility"
+names(data)[28] <- "legal"
+names(data)[29] <- "educ" #GED or education assistance
+names(data)[30] <- "health"
+names(data)[31] <- "counseling"
+names(data)[32] <- "trans" #Transportation assistance
+names(data)[33] <- "cloth" #Clothing or furniture
+names(data)[34] <- "ref" #Referrals to other programs
+names(data)[35] <- "medicaid" #Medicaid or CHIP
+names(data)[36] <- "money" #Financial, tax prep, budgeting
+names(data)[37] <- "nonfood_ben_other"
 
 # Rename number of clients served per month
-names(data)[187] <- "clients"
+names(data)[38] <- "clients"
+```
+
+```{r Generate Census Variables}
+# Generate poverty rate variables
+data <- mutate(data, pov_rateT = povpop10071 / povpopd71)
+data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile)
+data <- mutate(data, pov_rate3 = povpop_3m / povpopd713mile)
+
+# Generate White demographic variables
+data <- mutate(data, white_rateT = nhwht71 / pop71)
+data <- mutate(data, white_rate1 = nhwht711mile / povpopd711mile)
+data <- mutate(data, white_rate3 = nhwht713mile / povpopd713mile)
+
+# Gnerate Black demographic variables
+data <- mutate(data, black_rateT = blk71 / pop71)
+data <- mutate(data, black_rate1 = blk711mile / povpopd711mile)
+data <- mutate(data, black_rate3 = blk713mile / povpopd713mile)
+
+# Generate Hispanic demographic variables
+data <- mutate(data, hisp_rateT = hsp71 / pop71)
+data <- mutate(data, hisp_rate1 = hsp711mile / povpopd711mile)
+data <- mutate(data, hisp_rate3 = hsp713mile / povpopd713mile)
+
+# Generate SNAP rates
+data <- mutate(data, snap_rateT = hhsnapfam271 / hhsnapfam171)
+data <- mutate(data, snap_rate1 = hhsnapfam2711mile / hh711mile)
+data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile)
+
+# Split census tract identifyer
+str(data$tract)
+
+data <- mutate(data, tract_short = substr(tract, 3, 11))
 ```
 
 ### EXPLORING DICHOTOMOUS DATA
@@ -252,7 +346,7 @@ hist(log(data$clients))
 ### Mapping
 
 ```{r}
-compressedMap= "https://github.com/lrsulli/Project/raw/master/2010_Census_Tracts_v17a.zip"
+compressedMap= "https://github.com/lrsulli/Project/raw/master/map/2010_Census_Tracts_v17a.zip"
 ```
 
 ```{r}
@@ -274,11 +368,15 @@ names(tractMap)
 ```
 
 ```{r}
-str(tractMap$NAME)
+str(tractMap$LINK)
 ```
 
 ```{r}
-tractMap$NAME=as.numeric(tractMap$NAME)
+tractMap$NAME=as.numeric(tractMap$LINK)
+```
+
+```{r}
+map_final = merge(data, tractMap, by.x='tract_short', by.y='LINK', all.x=F)
 ```
 
 ```{r}
