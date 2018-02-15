@@ -1,6 +1,6 @@
 ---
 title: "Final Project"
-last updated: 2/1/18
+last updated: 2/15/18
 ---
 
 ## FINAL PROJECT
@@ -17,6 +17,8 @@ library(jsonlite)
 library(utils)
 library(rgdal)
 library(readstata13)
+library(RColorBrewer)
+library(classInt)
 
 # Functions
 getMode = function(aColumn){
@@ -88,12 +90,6 @@ data_census1 = read.dta13(temp)
 head(data_census1,4)
 ```
 
-```{r Merge Data: Census 1}
-data = merge(data, data_census1, by="STUDYID")
-
-data = data.frame(data)
-```
-
 ```{r Import Data: Census 2}
 # Second census data file
 temp = tempfile(fileext = '.dta')
@@ -102,12 +98,6 @@ download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_census2 = read.dta13(temp)
 head(data_census2,4)
-```
-
-```{r Merge Data: Census 2}
-data = merge(data, data_census2, by="tr10fips")
-
-data = data.frame(data)
 ```
 
 ```{r Import Data: Census 3}
@@ -120,8 +110,15 @@ data_census3 = read.dta13(temp)
 head(data_census3,4)
 ```
 
-```{r Merge Data: Census 3}
-data = merge(data, data_census3, by="tr10fips")
+```{r Merge Data: Census}
+data_census = merge(data_census2, data_census3, by="tr10fips")
+
+data_census = data.frame(data_census)
+```
+
+```{r Merge Data: Census with Data}
+data = merge(data, data_census1, by="STUDYID")
+data = merge(data, data_census, by='tr10fips')
 
 data = data.frame(data)
 ```
@@ -221,7 +218,12 @@ data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile)
 # Split census tract identifyer
 str(data$tract)
 
+# Drop state ID from census tract number
 data <- mutate(data, tract_short = substr(tract, 3, 11))
+
+# Create county fips code variable
+data <- mutate(data, county_fips = substr(tract, 3, 5))
+data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5))
 ```
 
 ### EXPLORING DICHOTOMOUS DATA
@@ -376,10 +378,54 @@ tractMap$NAME=as.numeric(tractMap$LINK)
 ```
 
 ```{r}
-map_final = merge(data, tractMap, by.x='tract_short', by.y='LINK', all.x=F)
+# Keep Wayne, Macomb, and Oakland Counties (FIPS = 163, 099, and 125)
+map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125')
+data_counties = subset(data_census, county_fips=='163' | county_fips=='099' | county_fips=='125')
+data_counties = data_counties[!duplicated(data_counties[c('tract_short')]),]
+
+# Merge with census data
+map_back = merge(map_counties,data_counties,by.x='LINK', by.y='tract_short', all.x=F)
 ```
 
 ```{r}
-plot(tractMap,col='black')
+# Drop multiple census tracts
+unique_tracts = data[!duplicated(data[c('tract_short')]),]
 ```
 
+```{r}
+map_merge = merge(tractMap,unique_tracts,by.x='LINK', by.y='tract_short', all.x=F)
+```
+
+```{r}
+plot(map_back, col='black')
+```
+
+### Plot Map by poverty rate
+
+```{r}
+varToPLot=map_final$pov_rateT
+```
+
+```{r}
+numberOfClasses = 5
+colorForScale='YlGnBu'
+colors = brewer.pal(numberOfClasses, colorForScale)
+intervals <- classIntervals(varToPLot, numberOfClasses, 
+                            style = "quantile",
+                            dataPrecision=2)
+colorPallette <- findColours(intervals, colors)
+```
+
+```{r}
+legendText="Poverty Rate"
+shrinkLegend=0.9
+title="Poverty Rate by Census Tract"
+
+plot(map_back, col='grey')
+plot(map_final, col = colorPallette, main=title,border='black',add=T)
+
+legend('topright', legend = names(attr(colorPallette, "table")), 
+       fill = attr(colorPallette, "palette"), cex = shrinkLegend, 
+       bty = "n",
+       title=legendText)
+```
