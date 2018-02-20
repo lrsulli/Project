@@ -426,7 +426,7 @@ legend('topright', legend = names(attr(colorPallette, "table")),
        title=legendText)
 ```
 
-```{r Geocoding}
+```{r Geocoding, eval=FALSE}
 # Prepare data_address data frame
 data_address$address <- do.call(paste, c(data_address[c("Street Address", "City", "State")], sep = ",")) 
 
@@ -452,15 +452,28 @@ data_address <- mutate(data_address, lon = substr(location, 29, 38))
 map_address <- merge(data_address, data, by.x='STUDYID', by.y='id')
 
 map_address = map_address[,c('STUDYID','lat','lon')]
+
+write.csv(map_address, "geocoded_addresses.csv")
+```
+
+```{r Import Data: Geocoded Addresses}
+temp = tempfile(fileext = '.csv')
+dataURL <- "https://raw.githubusercontent.com/lrsulli/Project/master/geocoded_addresses.csv"
+download.file(dataURL, destfile = temp, mode = 'wb')
+
+map_address = read.csv(temp, header = TRUE, sep = ",")
+
+map_address$lat = as.character(map_address$lat) 
+map_address$lon = as.character(map_address$lon) 
 ```
 
 ```{r Map Points}
 legendText="Poverty Rate"
 shrinkLegend=0.8
 title="Poverty Rate by Census Tract"
-cex=0.35
+shrinkPoints=0.35
 
-plot(map_counties, col = 'black')
+plot(map_counties, col = 'grey')
 plot(map_counties, col = colorPallette, main=title,border='black',add=T)
 
 legend('topright', legend = names(attr(colorPallette, "table")), 
@@ -468,6 +481,5 @@ legend('topright', legend = names(attr(colorPallette, "table")),
        bty = "n",
        title=legendText)
 
-points(map_address$lon, map_address$lat, col = "red", pch =19, cex = cex)
+points(map_address$lon, map_address$lat, col = "red", pch =19, cex = shrinkPoints)
 ```
-
