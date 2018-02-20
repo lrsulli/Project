@@ -19,6 +19,8 @@ library(rgdal)
 library(readstata13)
 library(RColorBrewer)
 library(classInt)
+library(ggmap)
+library(googleway)
 
 # Functions
 getMode = function(aColumn){
@@ -381,8 +383,8 @@ tractMap$NAME=as.numeric(tractMap$LINK)
 ```
 
 ```{r}
-# Keep Wayne, Macomb, and Oakland Counties (FIPS = 163, 099, and 125)
-map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125')
+# Keep Wayne, Macomb, Oakland, and Washtenaw Counties (FIPS = 163, 099, 125, and 161)
+map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125' | CNTY_CODE=='161')
 
 data_counties = data_census[!duplicated(data_census[c('tract_short')]),]
 
@@ -423,3 +425,49 @@ legend('topright', legend = names(attr(colorPallette, "table")),
        bty = "n",
        title=legendText)
 ```
+
+```{r Geocoding}
+# Prepare data_address data frame
+data_address$address <- do.call(paste, c(data_address[c("Street Address", "City", "State")], sep = ",")) 
+
+# Got code from https://qanda.science/r/3956223_batch-geocoding-with-googleway-r-how-to.jsp
+
+api_key = "AIzaSyC2uRbBeIFBwdSiH6KH69Stx_TUoqPN0bY"
+
+res <- apply(data_address, 1, function(x){
+  google_geocode(address = x[['address']],
+                 key = api_key)
+})
+
+data_address$location <- lapply(res, function(x){
+  x$results$geometry$location
+})
+
+# Create lat and lon variables
+data_address$location = as.character(data_address$location)
+
+data_address <- mutate(data_address, lat = substr(location, 12, 20))
+data_address <- mutate(data_address, lon = substr(location, 29, 38))
+
+map_address <- merge(data_address, data, by.x='STUDYID', by.y='id')
+
+map_address = map_address[,c('STUDYID','lat','lon')]
+```
+
+```{r Map Points}
+legendText="Poverty Rate"
+shrinkLegend=0.8
+title="Poverty Rate by Census Tract"
+cex=0.35
+
+plot(map_counties, col = 'black')
+plot(map_counties, col = colorPallette, main=title,border='black',add=T)
+
+legend('topright', legend = names(attr(colorPallette, "table")), 
+       fill = attr(colorPallette, "palette"), cex = shrinkLegend, 
+       bty = "n",
+       title=legendText)
+
+points(map_address$lon, map_address$lat, col = "red", pch =19, cex = cex)
+```
+
