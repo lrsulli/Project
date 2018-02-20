@@ -1,6 +1,6 @@
 ---
 title: "Final Project"
-last updated: 2/15/18
+last updated: 2/19/18
 ---
 
 ## FINAL PROJECT
@@ -35,7 +35,6 @@ dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/fp_survey_2_
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_initial = read_excel(temp, sheet = 1)
-head(data_initial,4)
 ```
 
 ```{r Import Data: Recodes}
@@ -45,7 +44,6 @@ dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/recode_Q12_Q
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_recode = read_excel(temp, sheet = 1)
-head(data_recode,4)
 ```
 
 ```{r Import Data: Addresses}
@@ -55,7 +53,6 @@ dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/address_list
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_address = read_excel(temp, sheet = 1)
-head(data_address,4)
 ```
 
 ```{r Merge Data: Recodes}
@@ -63,7 +60,6 @@ head(data_address,4)
 names(data_recode)
 data_recode = data_recode[,c(1,5:6,14:15,19:20)]
 names(data_recode)[1] <- "STUDYID"
-head(data_recode,4)
 
 # Merge recode file with initial data set
 data = merge(data_initial, data_recode, by="STUDYID")
@@ -72,9 +68,8 @@ data = merge(data_initial, data_recode, by="STUDYID")
 ```{r Merge Data: Addresses}
 # Prepare address list file
 names(data_address)[1] <- "STUDYID"
-head(data_address,4)
 
-# Merge address list
+# Merge address list with initial data set and recodes
 data = merge(data, data_address, by="STUDYID")
 
 data = data.frame(data)
@@ -87,7 +82,6 @@ dataURL <- "https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_census1 = read.dta13(temp)
-head(data_census1,4)
 ```
 
 ```{r Import Data: Census 2}
@@ -97,7 +91,6 @@ dataURL <- "https://github.com/lrsulli/Project/raw/master/Census_Data%204_28_17.
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_census2 = read.dta13(temp)
-head(data_census2,4)
 ```
 
 ```{r Import Data: Census 3}
@@ -107,18 +100,21 @@ dataURL<-"https://github.com/lrsulli/Project/raw/master/tract10detroit_povertypo
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_census3 = read.dta13(temp)
-head(data_census3,4)
 ```
 
 ```{r Merge Data: Census}
-data_census = merge(data_census2, data_census3, by="tr10fips")
+# Merge Census1 and Census2
+data_census = merge(data_census1, data_census2, by="tr10fips", all=T) #keep all tracts
+
+# Merge Census3 with Census1 and Census2
+data_census = merge(data_census, data_census3, by="tr10fips", all=T)
 
 data_census = data.frame(data_census)
 ```
 
-```{r Merge Data: Census with Data}
-data = merge(data, data_census1, by="STUDYID")
-data = merge(data, data_census, by='tr10fips')
+```{r Merge Data: Census with Survey Data}
+# Merge Census data and survey data
+data = merge(data, data_census, by='STUDYID') #keep tracts with orgs
 
 data = data.frame(data)
 ```
@@ -132,7 +128,7 @@ names(data)
 data_copy = data
 
 # Only keep needed variables
-data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','povpop10071','povpopd71','povpop_1m',"povpopd711mile","povpop_3m","povpopd713mile","nhwht71","pop71","nhwht711mile","nhwht713mile","blk71","blk711mile","blk713mile","hsp71","hsp711mile","hsp713mile","hhsnapfam271","hhsnapfam171","hhsnapfam2711mile","hh711mile","hhsnapfam2713mile","hh713mile")]
+data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','Street.Address','City','State','Zip','County','povpop10071','povpopd71','povpop_1m',"povpopd711mile","povpop_3m","povpopd713mile","nhwht71","pop71","nhwht711mile","nhwht713mile","blk71","blk711mile","blk713mile","hsp71","hsp711mile","hsp713mile","hhsnapfam271","hhsnapfam171","hhsnapfam2711mile","hh711mile","hhsnapfam2713mile","hh713mile")]
 ```
 
 ```{r Rename Variables}
@@ -195,6 +191,11 @@ data <- mutate(data, pov_rateT = povpop10071 / povpopd71)
 data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile)
 data <- mutate(data, pov_rate3 = povpop_3m / povpopd713mile)
 
+# Reconicle naming discrepancies between census data sets
+data_census$povpop10071[is.na(data_census$povpop10071)] <- 0
+
+data_census <- mutate(data_census, pov_rateT = ifelse(povpop10071==0, povpop100711mile / povpopd711mile, povpop10071 / povpopd71))
+
 # Generate White demographic variables
 data <- mutate(data, white_rateT = nhwht71 / pop71)
 data <- mutate(data, white_rate1 = nhwht711mile / povpopd711mile)
@@ -215,11 +216,13 @@ data <- mutate(data, snap_rateT = hhsnapfam271 / hhsnapfam171)
 data <- mutate(data, snap_rate1 = hhsnapfam2711mile / hh711mile)
 data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile)
 
-# Split census tract identifyer
+# Prepare to split census tract identifyer
 str(data$tract)
+str(data_census$tr10fips)
 
-# Drop state ID from census tract number
+# Create fips number without state identifier
 data <- mutate(data, tract_short = substr(tract, 3, 11))
+data_census <- mutate(data_census, tract_short = substr(tr10fips, 3, 11))
 
 # Create county fips code variable
 data <- mutate(data, county_fips = substr(tract, 3, 5))
@@ -380,30 +383,21 @@ tractMap$NAME=as.numeric(tractMap$LINK)
 ```{r}
 # Keep Wayne, Macomb, and Oakland Counties (FIPS = 163, 099, and 125)
 map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125')
-data_counties = subset(data_census, county_fips=='163' | county_fips=='099' | county_fips=='125')
-data_counties = data_counties[!duplicated(data_counties[c('tract_short')]),]
+
+data_counties = data_census[!duplicated(data_census[c('tract_short')]),]
 
 # Merge with census data
-map_back = merge(map_counties,data_counties,by.x='LINK', by.y='tract_short', all.x=F)
+map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short', all.x=F)
 ```
 
 ```{r}
-# Drop multiple census tracts
-unique_tracts = data[!duplicated(data[c('tract_short')]),]
-```
-
-```{r}
-map_merge = merge(tractMap,unique_tracts,by.x='LINK', by.y='tract_short', all.x=F)
-```
-
-```{r}
-plot(map_back, col='black')
+plot(map_counties, col='black')
 ```
 
 ### Plot Map by poverty rate
 
 ```{r}
-varToPLot=map_final$pov_rateT
+varToPLot=map_counties$pov_rateT
 ```
 
 ```{r}
@@ -418,11 +412,11 @@ colorPallette <- findColours(intervals, colors)
 
 ```{r}
 legendText="Poverty Rate"
-shrinkLegend=0.9
+shrinkLegend=0.8
 title="Poverty Rate by Census Tract"
 
-plot(map_back, col='grey')
-plot(map_final, col = colorPallette, main=title,border='black',add=T)
+plot(map_counties, col = 'black')
+plot(map_counties, col = colorPallette, main=title,border='black',add=T)
 
 legend('topright', legend = names(attr(colorPallette, "table")), 
        fill = attr(colorPallette, "palette"), cex = shrinkLegend, 
