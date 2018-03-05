@@ -21,6 +21,7 @@ library(RColorBrewer)
 library(classInt)
 library(ggmap)
 library(googleway)
+library(pander)
 
 # Functions
 getMode = function(aColumn){
@@ -244,18 +245,24 @@ data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5))
 
 ```{r Meals: Distribution}
 # Distribution of values
-table(data$meals)
+pander(table(data$meals), stlye = 'rmarkdown', caption = "Number of food pantries offering meal programs.")
 ```
+
+```{r}
+data_table = data[,c('meals','groceries','food_ben','nonfood_ben')]
+```
+
 
 ```{r Meals: Frequencies}
 # Relative Frequencies
-prop.table(table(data$meals))
+pander((prop.table(table(data$meals)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering meal programs.", digits = 3)
+
+pander(prop.table(table(data_table))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering meal programs.", digits = 3)
 ```
 
 ```{r Meals: Chi Square}
 # Are the difference significant?
-distribution = table(data$meals)
-chisq.test(distribution)
+pander(chisq.test(table(data$meals)), stlye = 'rmarkdown', caption = "Chi square test for food pantries offering meal programs")
 ```
 
 ```{r Meals: Central Measure}
@@ -372,7 +379,7 @@ unzip(temp)
 ```
 
 ```{r Shapefiles}
-# Determine which sahpefiles are in folder
+# Determine which shapefiles are in folder
 (maps = list.files(pattern = 'shp'))
 ```
 
@@ -382,10 +389,10 @@ tractMap <- rgdal::readOGR("2010_Census_Tracts_v17a.shp", stringsAsFactors=F)
 ```
 
 ```{r Explore Map Data}
-names(tractMap) #Check variable names
-str(tractMap$LINK) #Check LINK (FIPS) variable type
+names(tractMap) #check variable names
+str(tractMap$LINK) #check LINK (FIPS code) variable type
 
-# Change LINK (FIPS) variable into an interger
+# Change LINK (FIPS code) variable into an interger
 tractMap$NAME=as.numeric(tractMap$LINK)
 ```
 
@@ -395,7 +402,7 @@ tractMap$NAME=as.numeric(tractMap$LINK)
 # Keep Wayne, Macomb, Oakland, and Washtenaw Counties (FIPS = 163, 099, 125, and 161)
 map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125' | CNTY_CODE=='161')
 
-data_counties = data_census[!duplicated(data_census[c('tract_short')]),] #Drop duplicate tracts
+data_counties = data_census[!duplicated(data_census[c('tract_short')]),] #drop duplicate tracts
 
 # Merge map data with census data
 map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short', all.x=F)
@@ -404,6 +411,56 @@ map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short
 ```{r Check County Map}
 # Check map to determine if correct counties selected
 plot(map_counties, col='black')
+```
+
+```{r Geocoding, eval=FALSE}
+# Only ran once because it takes awhile, wrote into an .csv file and put in Github repo
+
+# Prepare data_address data frame
+data_address$address <- do.call(paste, c(data_address[c("Street Address", "City", "State")], sep = ",")) #correct single line address format
+
+# Got code from https://qanda.science/r/3956223_batch-geocoding-with-googleway-r-how-to.jsp
+
+# API key for Google geocoding
+api_key = "AIzaSyC2uRbBeIFBwdSiH6KH69Stx_TUoqPN0bY"
+
+# Geocode addresses (only do once because of time)
+res <- apply(data_address, 1, function(x){
+  google_geocode(address = x[['address']],
+                 key = api_key)
+})
+
+# Add geocode results to data_address data frame
+data_address$location <- lapply(res, function(x){
+  x$results$geometry$location
+})
+
+# Create latitude and longitude variables from results
+data_address$location = as.character(data_address$location) #destring location variable
+
+data_address <- mutate(data_address, lat = substr(location, 12, 20)) #get latitude numbers
+data_address <- mutate(data_address, lon = substr(location, 29, 38)) #get longitude numbers
+
+# Merge latitude and longitude with main data set to get Study ID's
+map_address <- merge(data_address, data, by.x='STUDYID', by.y='id')
+
+# Keep only necessary variables
+map_address = map_address[,c('STUDYID','lat','lon')]
+
+# Create .csv file with geocode results
+write.csv(map_address, "geocoded_addresses.csv") #saved to Github repo
+```
+
+```{r Import Data: Geocoded Addresses}
+temp = tempfile(fileext = '.csv') #extension for Excel file
+dataURL <- "https://raw.githubusercontent.com/lrsulli/Project/master/geocoded_addresses.csv" #link to data
+download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
+
+map_address = read.csv(temp, header = TRUE, sep = ",") #get data
+
+# Redefine latitude and longitude variables
+map_address$lat = as.character(map_address$lat)
+map_address$lon = as.character(map_address$lon) 
 ```
 
 ```{r Select Variable}
@@ -425,74 +482,20 @@ intervals <- classIntervals(varToPLot, numberOfClasses,
 colorPallette <- findColours(intervals, colors)
 ```
 
-```{r}
-legendText="Poverty Rate"
-shrinkLegend=0.8
+```{r Plot}
+#Plot characteristics
+legendText="Poverty Rate" #legend title
+shrinkLegend=0.8 #legend size
 title="Poverty Rate by Census Tract"
+shrinkPoints=0.35 #point size
 
-plot(map_counties, col = 'black')
-plot(map_counties, col = colorPallette, main=title,border='black',add=T)
-
-legend('topright', legend = names(attr(colorPallette, "table")), 
-       fill = attr(colorPallette, "palette"), cex = shrinkLegend, 
-       bty = "n",
-       title=legendText)
-```
-
-```{r Geocoding, eval=FALSE}
-# Prepare data_address data frame
-data_address$address <- do.call(paste, c(data_address[c("Street Address", "City", "State")], sep = ",")) 
-
-# Got code from https://qanda.science/r/3956223_batch-geocoding-with-googleway-r-how-to.jsp
-
-api_key = "AIzaSyC2uRbBeIFBwdSiH6KH69Stx_TUoqPN0bY"
-
-res <- apply(data_address, 1, function(x){
-  google_geocode(address = x[['address']],
-                 key = api_key)
-})
-
-data_address$location <- lapply(res, function(x){
-  x$results$geometry$location
-})
-
-# Create lat and lon variables
-data_address$location = as.character(data_address$location)
-
-data_address <- mutate(data_address, lat = substr(location, 12, 20))
-data_address <- mutate(data_address, lon = substr(location, 29, 38))
-
-map_address <- merge(data_address, data, by.x='STUDYID', by.y='id')
-
-map_address = map_address[,c('STUDYID','lat','lon')]
-
-write.csv(map_address, "geocoded_addresses.csv")
-```
-
-```{r Import Data: Geocoded Addresses}
-temp = tempfile(fileext = '.csv')
-dataURL <- "https://raw.githubusercontent.com/lrsulli/Project/master/geocoded_addresses.csv"
-download.file(dataURL, destfile = temp, mode = 'wb')
-
-map_address = read.csv(temp, header = TRUE, sep = ",")
-
-map_address$lat = as.character(map_address$lat) 
-map_address$lon = as.character(map_address$lon) 
-```
-
-```{r Map Points}
-legendText="Poverty Rate"
-shrinkLegend=0.8
-title="Poverty Rate by Census Tract"
-shrinkPoints=0.35
-
-plot(map_counties, col = 'grey')
-plot(map_counties, col = colorPallette, main=title,border='black',add=T)
+plot(map_counties, col = 'grey') #plot background map (tracts without pantries)
+plot(map_counties, col = colorPallette, main=title,border='black',add=T) #plot poverty rates
 
 legend('topright', legend = names(attr(colorPallette, "table")), 
        fill = attr(colorPallette, "palette"), cex = shrinkLegend, 
        bty = "n",
        title=legendText)
 
-points(map_address$lon, map_address$lat, col = "red", pch =19, cex = shrinkPoints)
+points(map_address$lon, map_address$lat, col = "red", pch =19, cex = shrinkPoints) #add pantry locations
 ```
