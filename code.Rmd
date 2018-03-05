@@ -1,6 +1,6 @@
 ---
 title: "Final Project"
-last updated: 2/19/18
+last updated: 3/5/18
 ---
 
 ## FINAL PROJECT
@@ -33,7 +33,7 @@ getMode = function(aColumn){
 ```{r Import Data: Initial}
 # Initial data set from 2_15_13
 temp = tempfile(fileext = '.xlsx')
-dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/fp_survey_2_15_13.xlsx"
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/fp_survey_2_15_13.xlsx"
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_initial = read_excel(temp, sheet = 1)
@@ -42,7 +42,7 @@ data_initial = read_excel(temp, sheet = 1)
 ```{r Import Data: Recodes}
 # Recode file for Q12 and Q22 to Q25
 temp = tempfile(fileext = '.xlsx')
-dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/recode_Q12_Q22toQ25.xlsx"
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/recode_Q12_Q22toQ25.xlsx"
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_recode = read_excel(temp, sheet = 1)
@@ -51,7 +51,7 @@ data_recode = read_excel(temp, sheet = 1)
 ```{r Import Data: Addresses}
 # Address list data file
 temp = tempfile(fileext = '.xlsx')
-dataURL <- "https://github.com/lrsulli/GovAnalytics/raw/master/Data/address_list_5_20_13.xlsx"
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/address_list_5_20_13.xlsx"
 download.file(dataURL, destfile = temp, mode = 'wb')
 
 data_address = read_excel(temp, sheet = 1)
