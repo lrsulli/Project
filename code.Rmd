@@ -3,9 +3,7 @@ title: "Final Project"
 last updated: 3/5/18
 ---
 
-## FINAL PROJECT
-
-```{r Setup}
+```{r Setup, warning=FALSE, message=FALSE}
 # Libraries
 library(readxl)
 library(dplyr)
@@ -31,7 +29,7 @@ getMode = function(aColumn){
 }
 ```
 
-```{r Import Data: Initial}
+```{r Import Data: Initial, warning=FALSE, message=FALSE}
 # Import initial survey responses from 2_15_13
 temp = tempfile(fileext = '.xlsx') #extension for Excel fie
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/fp_survey_2_15_13.xlsx" #link to data
@@ -40,7 +38,7 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 data_initial = read_excel(temp, sheet = 1) #get data
 ```
 
-```{r Import Data: Recodes}
+```{r Import Data: Recodes, warning=FALSE, message=FALSE}
 # Recode file for Q12 and Q22 to Q25
 temp = tempfile(fileext = '.xlsx') #extension for Excel fie
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/recode_Q12_Q22toQ25.xlsx" #link to data
@@ -49,7 +47,7 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 data_recode = read_excel(temp, sheet = 1) #get data
 ```
 
-```{r Import Data: Addresses}
+```{r Import Data: Addresses, warning=FALSE, message=FALSE}
 # Address list data file
 temp = tempfile(fileext = '.xlsx') #extension for Excel fie
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/address_list_5_20_13.xlsx" #link to data
@@ -58,7 +56,7 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 data_address = read_excel(temp, sheet = 1) #get data
 ```
 
-```{r Merge Data: Recodes}
+```{r Merge Data: Recodes, warning=FALSE, message=FALSE}
 # Prepare recode file
 names(data_recode)
 data_recode = data_recode[,c(1,5:6,14:15,19:20)] #only keep necessary variables
@@ -68,7 +66,7 @@ names(data_recode)[1] <- "STUDYID" #rename to match initial data set
 data = merge(data_initial, data_recode, by="STUDYID")
 ```
 
-```{r Merge Data: Addresses}
+```{r Merge Data: Addresses, warning=FALSE, message=FALSE}
 # Prepare address list file
 names(data_address)[1] <- "STUDYID" #rename to match initil data set
 
@@ -78,7 +76,7 @@ data = merge(data, data_address, by="STUDYID")
 data = data.frame(data) #convert to data frame
 ```
 
-```{r Import Data: Census 1}
+```{r Import Data: Census 1, warning=FALSE, message=FALSE}
 # Import first of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_17.dta" #link to data
@@ -87,7 +85,7 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 data_census1 = read.dta13(temp) #get data
 ```
 
-```{r Import Data: Census 2}
+```{r Import Data: Census 2, warning=FALSE, message=FALSE}
 # Import second of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Census_Data%204_28_17.dta" #link to data
@@ -96,7 +94,7 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 data_census2 = read.dta13(temp) #get data
 ```
 
-```{r Import Data: Census 3}
+```{r Import Data: Census 3, warning=FALSE, message=FALSE}
 # Import third of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL<-"https://github.com/lrsulli/Project/raw/master/tract10detroit_povertypop_123mile.dta" #link to data
@@ -105,7 +103,7 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 data_census3 = read.dta13(temp) #get data
 ```
 
-```{r Merge Data: Census}
+```{r Merge Data: Census, warning=FALSE, message=FALSE}
 # Merge first two census data files (Census1 and Census2)
 data_census = merge(data_census1, data_census2, by="tr10fips", all=T) #keep all tracts
 
@@ -115,19 +113,19 @@ data_census = merge(data_census, data_census3, by="tr10fips", all=T) #keep all t
 data_census = data.frame(data_census) #convert to data frame
 ```
 
-```{r Merge Data: Census with Survey Data}
+```{r Merge Data: Census with Survey Data, warning=FALSE, message=FALSE}
 # Merge Census data and survey data
 data = merge(data, data_census, by='STUDYID') #only keep tracts that have organizations
 
 data = data.frame(data) #convert to data frame
 ```
 
-```{r Check Variable Names}
+```{r Check Variable Names, warning=FALSE, message=FALSE, eval=FALSE}
 # Check variable names of data
 names(data)
 ```
 
-```{r Drop Variables}
+```{r Drop Variables, warning=FALSE, message=FALSE}
 # Create a copy of original data set
 data_copy = data
 
@@ -135,7 +133,7 @@ data_copy = data
 data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','Street.Address','City','State','Zip','County','povpop10071','povpopd71','povpop_1m',"povpopd711mile","povpop_3m","povpopd713mile","nhwht71","pop71","nhwht711mile","nhwht713mile","blk71","blk711mile","blk713mile","hsp71","hsp711mile","hsp713mile","hhsnapfam271","hhsnapfam171","hhsnapfam2711mile","hh711mile","hhsnapfam2713mile","hh713mile")]
 ```
 
-```{r Rename Variables}
+```{r Rename Variables, warning=FALSE, message=FALSE}
 # Check variable names of data
 names(data)
 
@@ -190,7 +188,7 @@ names(data)[37] <- "nonfood_ben_other" #Offer other types of non-food related be
 names(data)[38] <- "clients"
 ```
 
-```{r Generate Census Variables}
+```{r Generate Census Variables, warning=FALSE, message=FALSE}
 # Generate poverty rate variables
 data <- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within tract
 data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile) #Rate within 1 mile
@@ -223,7 +221,7 @@ data <- mutate(data, snap_rate1 = hhsnapfam2711mile / hh711mile) #Rate within 1 
 data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile) #Rate within 3 miles
 ```
 
-```{r Generate County FIPS Variables}
+```{r Generate County FIPS Variables, warning=FALSE, message=FALSE}
 # Need county FIPS variable to focus analysis on Detroit metro area
 
 # Prepare to split census tract identifyer
@@ -243,152 +241,96 @@ data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5))
 
 #### Meal Programs
 
-```{r Meals: Distribution}
+```{r Meals: Distribution, warning=FALSE, message=FALSE}
 # Distribution of values
 pander(table(data$meals), stlye = 'rmarkdown', caption = "Number of food pantries offering meal programs.")
 ```
 
-```{r}
-data_table = data[,c('meals','groceries','food_ben','nonfood_ben')]
-```
-
-
-```{r Meals: Frequencies}
+```{r Meals: Frequencies, warning=FALSE, message=FALSE}
 # Relative Frequencies
 pander((prop.table(table(data$meals)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering meal programs.", digits = 3)
-
-pander(prop.table(table(data_table))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering meal programs.", digits = 3)
-```
-
-```{r Meals: Chi Square}
-# Are the difference significant?
-pander(chisq.test(table(data$meals)), stlye = 'rmarkdown', caption = "Chi square test for food pantries offering meal programs")
-```
-
-```{r Meals: Central Measure}
-# Central measurement and dispersion
-getMode(data$meals)
 ```
 
 #### Groceries
 
-```{r Groceries: Distribution}
+```{r Groceries: Distribution, warning=FALSE, message=FALSE}
 # Distribution of values
-table(data$groceries)
+pander(table(data$groceries), stlye = 'rmarkdown', caption = "Number of food pantries offering grocery programs.")
 ```
 
-```{r Groceries: Frequencies}
+```{r Groceries: Frequencies, warning=FALSE, message=FALSE}
 # Relative Frequencies
-prop.table(table(data$groceries))
-```
-
-```{r Groceries: Chi Square}
-# Are the difference significant?
-distribution = table(data$groceries)
-chisq.test(distribution)
-```
-
-```{r Groceries: Central Measure}
-# Central measurement and dispersion
-getMode(data$groceries)
+pander((prop.table(table(data$groceries)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering grocery programs.", digits = 3)
 ```
 
 #### Food Related Benefits
 
-```{r Food Benefits: Distribution}
+```{r Food Benefits: Distribution, warning=FALSE, message=FALSE}
 # Distribution of values
-table(data$food_ben)
+pander(table(data$food_ben), stlye = 'rmarkdown', caption = "Number of food pantries offering food-related benefits.")
 ```
 
-```{r Food Benefits: Frequencies}
+```{r Food Benefits: Frequencies, warning=FALSE, message=FALSE}
 # Relative Frequencies
-prop.table(table(data$food_ben))
-```
-
-```{r Food Benefits: Chi Square}
-# Are the difference significant?
-distribution = table(data$food_ben)
-chisq.test(distribution)
-```
-
-```{r Food Benefits: Central Measure}
-# Central measurement and dispersion
-getMode(data$food_ben)
+pander((prop.table(table(data$food_ben)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering food-related benefits.", digits = 3)
 ```
 
 #### Non-Food Related Benefits
 
-```{r Non-Food Benefits: Distribution}
+```{r Non-Food Benefits: Distribution, warning=FALSE, message=FALSE}
 # Distribution of values
-table(data$nonfood_ben)
+pander(table(data$nonfood_ben), stlye = 'rmarkdown', caption = "Number of food pantries offering non-food related benefits.")
 ```
 
-```{r Non-Food Benefits: Frequencies}
+```{r Non-Food Benefits: Frequencies, warning=FALSE, message=FALSE}
 # Relative Frequencies
-prop.table(table(data$nonfood_ben))
-```
-
-```{r Non-Food Benefits: Chi Square}
-# Are the difference significant?
-distribution = table(data$nonfood_ben)
-chisq.test(distribution)
-```
-
-```{r Non-Food Benefits: Central Measure}
-# Central measurement and dispersion
-getMode(data$nonfood_ben)
+pander((prop.table(table(data$nonfood_ben)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering non-food related benefits.", digits = 3)
 ```
 
 ### EXPLORING COUNT VARIABLES
 
 #### Average Number of Clients Served per Month
 
-```{r Clients: Centrality}
+```{r Clients: Centrality, warning=FALSE, message=FALSE}
 # Centrality
-summary(data$clients)
+pander(summary(data$clients), style = 'rmarkdown', caption = "Average number of clients served per month.")
 ```
 
-```{r Clients: Skewness}
-# Skewness
-skewness(data$clients, na.rm = T)
-```
-
-```{r Clients: Kurtosis}
-# Kurtosis
-kurtosis(data$clients, na.rm = T)
-```
-
-```{r Clients: Histogram}
+```{r Clients: Histogram, warning=FALSE, message=FALSE}
 # Histogram
-hist(data$clients)
-hist(log(data$clients))
+ggplot(data, aes(x=data$clients)) +
+  geom_histogram(color = "#1F3552", fill = "#4271AE") +
+  scale_x_log10() +
+  scale_y_continuous() +
+  labs(title="Clients Served") +
+  labs(x="Log of the Average Number of Clients Served per Month", y="Count")
 ```
 
 ### Mapping
 
-```{r Map Link}
+```{r Map Link, warning=FALSE, message=FALSE}
 # Link to map
 compressedMap= "https://github.com/lrsulli/Project/raw/master/map/2010_Census_Tracts_v17a.zip"
 ```
 
-```{r Unzip Map}
+```{r Unzip Map, warning=FALSE, message=FALSE}
 # Unzip compressed map folder
 temp=tempfile()
 download.file(compressedMap, temp)
 unzip(temp)
 ```
 
-```{r Shapefiles}
+```{r Shapefiles, warning=FALSE, message=FALSE}
 # Determine which shapefiles are in folder
 (maps = list.files(pattern = 'shp'))
 ```
 
-```{r Select Map}
+```{r Select Map, warning=FALSE, message=FALSE}
 # Select the map
 tractMap <- rgdal::readOGR("2010_Census_Tracts_v17a.shp", stringsAsFactors=F)
 ```
 
-```{r Explore Map Data}
+```{r Explore Map Data, warning=FALSE, message=FALSE}
 names(tractMap) #check variable names
 str(tractMap$LINK) #check LINK (FIPS code) variable type
 
@@ -396,7 +338,7 @@ str(tractMap$LINK) #check LINK (FIPS code) variable type
 tractMap$NAME=as.numeric(tractMap$LINK)
 ```
 
-```{r Select Counties}
+```{r Select Counties, warning=FALSE, message=FALSE}
 # Only need counties where pantries are located (Detroit metro area)
 
 # Keep Wayne, Macomb, Oakland, and Washtenaw Counties (FIPS = 163, 099, 125, and 161)
@@ -408,12 +350,12 @@ data_counties = data_census[!duplicated(data_census[c('tract_short')]),] #drop d
 map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short', all.x=F)
 ```
 
-```{r Check County Map}
+```{r Check County Map, warning=FALSE, message=FALSE}
 # Check map to determine if correct counties selected
 plot(map_counties, col='black')
 ```
 
-```{r Geocoding, eval=FALSE}
+```{r Geocoding, eval=FALSE, warning=FALSE, message=FALSE}
 # Only ran once because it takes awhile, wrote into an .csv file and put in Github repo
 
 # Prepare data_address data frame
@@ -451,7 +393,7 @@ map_address = map_address[,c('STUDYID','lat','lon')]
 write.csv(map_address, "geocoded_addresses.csv") #saved to Github repo
 ```
 
-```{r Import Data: Geocoded Addresses}
+```{r Import Data: Geocoded Addresses, warning=FALSE, message=FALSE}
 temp = tempfile(fileext = '.csv') #extension for Excel file
 dataURL <- "https://raw.githubusercontent.com/lrsulli/Project/master/geocoded_addresses.csv" #link to data
 download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
@@ -463,12 +405,12 @@ map_address$lat = as.character(map_address$lat)
 map_address$lon = as.character(map_address$lon) 
 ```
 
-```{r Select Variable}
+```{r Select Variable, warning=FALSE, message=FALSE}
 # Want to plot within tract poverty rate
 varToPLot=map_counties$pov_rateT
 ```
 
-```{r Plot Characteristics}
+```{r Plot Characteristics, warning=FALSE, message=FALSE}
 # Number of intervals
 numberOfClasses = 5 
 
@@ -482,7 +424,7 @@ intervals <- classIntervals(varToPLot, numberOfClasses,
 colorPallette <- findColours(intervals, colors)
 ```
 
-```{r Plot}
+```{r Plot, warning=FALSE, message=FALSE}
 #Plot characteristics
 legendText="Poverty Rate" #legend title
 shrinkLegend=0.8 #legend size
