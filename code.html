@@ -122,14 +122,12 @@ $(document).ready(function () {
 </div>
 
 
-<div id="the-organizational-structure-and-capacity-of-emergency-food-assistance-providers-in-the-detorit-metropolitan-area" class="section level3">
-<h3>The Organizational Structure and Capacity of Emergency Food Assistance Providers in the Detorit Metropolitan Area</h3>
-<div id="data-cleaning-and-analysis-tutorial" class="section level4">
-<h4>Data Cleaning and Analysis Tutorial</h4>
-<p>This tutorial will lead you through the steps of cleaning and analyzing survey data in R. This analysis is a part of a larger research examining the organizing structure and capacity of food pantries.</p>
+<div id="data-cleaning-and-analysis-tutorial" class="section level3">
+<h3>Data Cleaning and Analysis Tutorial</h3>
+<p>This tutorial will lead you through the steps of cleaning and analyzing survey data in R. This analysis is a part of a larger research project examining the organizing structure and capacity of food pantries. You will find instructions both in the text before each code chunk as well as in comment form within the chunks.</p>
 <div id="about-the-data" class="section level5">
 <h5>About the Data</h5>
-<p>The data used for this tutuorial is from a survey on emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. Also, we will use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.</p>
+<p>The data used for this tutuorial is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.</p>
 <pre class="r"><code># Libraries
 library(readxl) #used
 library(dplyr)
@@ -153,12 +151,19 @@ getMode = function(aColumn){
   maxFrequency=max(freqTable)
   names(freqTable[freqTable==maxFrequency])
 }</code></pre>
+</div>
+<div id="step-1-create-dataset" class="section level4">
+<h4>Step 1: Create Dataset</h4>
+<p>The survey data comes in three different Excel files: inital responses from 2/15/13, recoded questions, and addresses. We need to import each of these indvidually and then merge them together. All of the raw data files are stored on Github and we will temporarily download them for our analysis.</p>
+<div id="import-survey-data" class="section level5">
+<h5>Import Survey Data</h5>
+<p>First we need to import the data. We will use the “readxl” package, so make sure this package is installed the first time you use it. We will import the three Excel files individually and place them in separate in data frames.</p>
 <pre class="r"><code># Load library
 # First time you need to install &quot;readxl&quot;: install.packages(&quot;readxl&quot;)
 library(readxl)
 
 # Import initial survey responses from 2_15_13
-temp = tempfile(fileext = '.xlsx') #extension for Excel fie
+temp = tempfile(fileext = '.xlsx') #extension for Excel files
 dataURL &lt;- &quot;https://github.com/lrsulli/Project/raw/master/Data/fp_survey_2_15_13.xlsx&quot; #link to data
 download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 
@@ -181,7 +186,14 @@ dataURL &lt;- &quot;https://github.com/lrsulli/Project/raw/master/Data/address_l
 download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 
 data_address = read_excel(temp, sheet = 1) #get data</code></pre>
+</div>
+<div id="merge-survey-data" class="section level5">
+<h5>Merge Survey Data</h5>
+<p>Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a “Study ID” was given to each provider when they answered the surveyed. We will merge using this identifyer.</p>
+<p>We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simplier.</p>
+<p>First, we will merge the intial survey responses with the recode file:</p>
 <pre class="r"><code># Prepare recode file
+# We don't need all of these varaibles so we will only keep the necessary ones:
 names(data_recode)</code></pre>
 <pre><code>##  [1] &quot;ID Number&quot;                                                                                                              
 ##  [2] &quot;Q12 - About how many unique individual clients did you serve in your food assistance programs in the most recent month?&quot;
@@ -209,13 +221,17 @@ names(data_recode)[1] &lt;- &quot;STUDYID&quot; #rename to match initial data se
 
 # Merge recode file with initial data set
 data = merge(data_initial, data_recode, by=&quot;STUDYID&quot;)</code></pre>
+<p>Then we add the address data frame:</p>
 <pre class="r"><code># Prepare address list file
-names(data_address)[1] &lt;- &quot;STUDYID&quot; #rename to match initil data set
+names(data_address)[1] &lt;- &quot;STUDYID&quot; #rename to match inital data set
 
 # Merge address list with initial data set and recodes
 data = merge(data, data_address, by=&quot;STUDYID&quot;)
 
 data = data.frame(data) #convert to data frame</code></pre>
+</div>
+<div id="import-census-data" class="section level5">
+<h5>Import Census Data</h5>
 <pre class="r"><code># Import first of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL &lt;- &quot;https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_17.dta&quot; #link to data

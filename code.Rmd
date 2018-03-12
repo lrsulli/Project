@@ -3,13 +3,12 @@ title: "Final Project - MASTER"
 last updated: 3/12/18
 ---
 
-###The Organizational Structure and Capacity of Emergency Food Assistance Providers in the Detorit Metropolitan Area
-####Data Cleaning and Analysis Tutorial
-
-This tutorial will lead you through the steps of cleaning and analyzing survey data in R. This analysis is a part of a larger research examining the organizing structure and capacity of food pantries.
-
-#####About the Data
-The data used for this tutuorial is from a survey on emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. Also, we will use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of  programs offered, geographic location, and demographic characteristics.
+###Data Cleaning and Analysis Tutorial
+  
+This tutorial will lead you through the steps of cleaning and analyzing survey data in R. This analysis is a part of a larger research project examining the organizing structure and capacity of food pantries. You will find instructions both in the text before each code chunk as well as in comment form within the chunks.
+  
+#####About the Data  
+The data used for this tutuorial is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
 
 ```{r Setup, warning=FALSE, message=FALSE}
 # Libraries
@@ -37,13 +36,21 @@ getMode = function(aColumn){
 }
 ```
 
+####Step 1: Create Dataset
+
+The survey data comes in three different Excel files: inital responses from 2/15/13, recoded questions, and addresses. We need to import each of these indvidually and then merge them together. All of the raw data files are stored on Github and we will temporarily download them for our analysis.
+
+#####Import Survey Data
+
+First we need to import the survey data. We will use the "readxl" package, so make sure this package is installed the first time you use it. We will import the three Excel files individually and place them in separate in data frames.
+
 ```{r Import Data: Initial, warning=FALSE, message=FALSE}
 # Load library
 # First time you need to install "readxl": install.packages("readxl")
 library(readxl)
 
 # Import initial survey responses from 2_15_13
-temp = tempfile(fileext = '.xlsx') #extension for Excel fie
+temp = tempfile(fileext = '.xlsx') #extension for Excel files
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/fp_survey_2_15_13.xlsx" #link to data
 download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 
@@ -74,25 +81,41 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 data_address = read_excel(temp, sheet = 1) #get data
 ```
 
+#####Merge Survey Data
+
+Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a "Study ID" was given to each provider when they answered the surveyed. We will merge using this identifyer. We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simplier.  
+
+First, we will merge the intial survey responses with the recode file:
+
 ```{r Merge Data: Recodes, warning=FALSE, message=FALSE}
 # Prepare recode file
-names(data_recode)
+names(data_recode) #Check names and see what the identifyer variable is called
+
+# We don't need all of these varaibles so we will only keep the necessary ones:
 data_recode = data_recode[,c(1,5:6,14:15,19:20)] #only keep necessary variables
+
+# Rename the identifyer variable so it matches the initial data set to keep things simplier:
 names(data_recode)[1] <- "STUDYID" #rename to match initial data set
 
 # Merge recode file with initial data set
 data = merge(data_initial, data_recode, by="STUDYID")
 ```
 
+Then we add the address data:
+
 ```{r Merge Data: Addresses, warning=FALSE, message=FALSE}
 # Prepare address list file
-names(data_address)[1] <- "STUDYID" #rename to match initil data set
+names(data_address)[1] <- "STUDYID" #rename to match inital data set
 
 # Merge address list with initial data set and recodes
 data = merge(data, data_address, by="STUDYID")
 
 data = data.frame(data) #convert to data frame
 ```
+
+#####Import Census Data
+
+We now need to import the Census data so we can analyze the demographics of the populations that the providers serve. This data comes in Stata or dta files which are also stored in Github. We import them the same way as the survey data, just with a different extension. Again, we will temporairly dowload each file and store them separately in different data frames.  
 
 ```{r Import Data: Census 1, warning=FALSE, message=FALSE}
 # Import first of three census data files
@@ -120,6 +143,11 @@ download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 
 data_census3 = read.dta13(temp) #get data
 ```
+
+#####Merge Census Data
+
+
+
 
 ```{r Merge Data: Census, warning=FALSE, message=FALSE}
 # Merge first two census data files (Census1 and Census2)
