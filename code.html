@@ -157,7 +157,7 @@ getMode = function(aColumn){
 <p>The survey data comes in three different Excel files: inital responses from 2/15/13, recoded questions, and addresses. We need to import each of these indvidually and then merge them together. All of the raw data files are stored on Github and we will temporarily download them for our analysis.</p>
 <div id="import-survey-data" class="section level5">
 <h5>Import Survey Data</h5>
-<p>First we need to import the data. We will use the “readxl” package, so make sure this package is installed the first time you use it. We will import the three Excel files individually and place them in separate in data frames.</p>
+<p>First we need to import the survey data. We will use the “readxl” package, so make sure this package is installed the first time you use it. We will import the three Excel files individually and place them in separate in data frames.</p>
 <pre class="r"><code># Load library
 # First time you need to install &quot;readxl&quot;: install.packages(&quot;readxl&quot;)
 library(readxl)
@@ -189,12 +189,10 @@ data_address = read_excel(temp, sheet = 1) #get data</code></pre>
 </div>
 <div id="merge-survey-data" class="section level5">
 <h5>Merge Survey Data</h5>
-<p>Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a “Study ID” was given to each provider when they answered the surveyed. We will merge using this identifyer.</p>
-<p>We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simplier.</p>
+<p>Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a “Study ID” was given to each provider when they answered the surveyed. We will merge using this identifyer. We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simplier.</p>
 <p>First, we will merge the intial survey responses with the recode file:</p>
 <pre class="r"><code># Prepare recode file
-# We don't need all of these varaibles so we will only keep the necessary ones:
-names(data_recode)</code></pre>
+names(data_recode) #Check names and see what the identifyer variable is called</code></pre>
 <pre><code>##  [1] &quot;ID Number&quot;                                                                                                              
 ##  [2] &quot;Q12 - About how many unique individual clients did you serve in your food assistance programs in the most recent month?&quot;
 ##  [3] &quot;Q12 Detail&quot;                                                                                                             
@@ -216,12 +214,15 @@ names(data_recode)</code></pre>
 ## [19] &quot;Q25RC&quot;                                                                                                                  
 ## [20] &quot;Q25RC Notes/Questions&quot;                                                                                                  
 ## [21] &quot;Initial Attempt at Q25RC&quot;</code></pre>
-<pre class="r"><code>data_recode = data_recode[,c(1,5:6,14:15,19:20)] #only keep necessary variables
+<pre class="r"><code># We don't need all of these varaibles so we will only keep the necessary ones:
+data_recode = data_recode[,c(1,5:6,14:15,19:20)] #only keep necessary variables
+
+# Rename the identifyer variable so it matches the initial data set to keep things simplier:
 names(data_recode)[1] &lt;- &quot;STUDYID&quot; #rename to match initial data set
 
 # Merge recode file with initial data set
 data = merge(data_initial, data_recode, by=&quot;STUDYID&quot;)</code></pre>
-<p>Then we add the address data frame:</p>
+<p>Then we add the address data:</p>
 <pre class="r"><code># Prepare address list file
 names(data_address)[1] &lt;- &quot;STUDYID&quot; #rename to match inital data set
 
@@ -232,6 +233,7 @@ data = data.frame(data) #convert to data frame</code></pre>
 </div>
 <div id="import-census-data" class="section level5">
 <h5>Import Census Data</h5>
+<p>We now need to import the Census data so we can analyze the demographics of the populations that the providers serve. This data comes in Stata, or .dta, files which are also stored in Github. We import them the same way as the survey data, just with a different extension. Again, we will temporairly dowload each file and store them separately in different data frames.</p>
 <pre class="r"><code># Import first of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL &lt;- &quot;https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_17.dta&quot; #link to data
@@ -250,6 +252,11 @@ dataURL&lt;-&quot;https://github.com/lrsulli/Project/raw/master/tract10detroit_p
 download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
 
 data_census3 = read.dta13(temp) #get data</code></pre>
+</div>
+<div id="merge-census-data" class="section level5">
+<h5>Merge Census Data</h5>
+<p>We then need to merge the census data files together as they contain different demographic variables that we need. We will again merge the data frames on a similar variable. For the census data frames this variable will be the census tract number. Then, to add the demographic variables to the survey data we will use the Study ID variable again, as it is included in one of the census data files.</p>
+<p>First, merge the census data frames:</p>
 <pre class="r"><code># Merge first two census data files (Census1 and Census2)
 data_census = merge(data_census1, data_census2, by=&quot;tr10fips&quot;, all=T) #keep all tracts
 
@@ -257,17 +264,24 @@ data_census = merge(data_census1, data_census2, by=&quot;tr10fips&quot;, all=T) 
 data_census = merge(data_census, data_census3, by=&quot;tr10fips&quot;, all=T) #keep all tracts
 
 data_census = data.frame(data_census) #convert to data frame</code></pre>
+<p>Then add the census data to the survey data (note that the census data contains all census tracts in Michigan, but we only need the tracts that have food providers in them):</p>
 <pre class="r"><code># Merge Census data and survey data
 data = merge(data, data_census, by='STUDYID') #only keep tracts that have organizations
 
 data = data.frame(data) #convert to data frame</code></pre>
+</div>
+<div id="clean-data-set" class="section level5">
+<h5>Clean Data Set</h5>
+<p>Let’s check to see what we have:</p>
 <pre class="r"><code># Check variable names of data
 names(data)</code></pre>
+<p>We don’t need all of these variables for our analysis. To make things simpler, we will only keep what we need. We will also make a copy of the original data frame just in case we miss something and want to come back and get it later.</p>
 <pre class="r"><code># Create a copy of original data set
 data_copy = data
 
 # Only keep necessary variables
 data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','Street.Address','City','State','Zip','County','povpop10071','povpopd71','povpop_1m',&quot;povpopd711mile&quot;,&quot;povpop_3m&quot;,&quot;povpopd713mile&quot;,&quot;nhwht71&quot;,&quot;pop71&quot;,&quot;nhwht711mile&quot;,&quot;nhwht713mile&quot;,&quot;blk71&quot;,&quot;blk711mile&quot;,&quot;blk713mile&quot;,&quot;hsp71&quot;,&quot;hsp711mile&quot;,&quot;hsp713mile&quot;,&quot;hhsnapfam271&quot;,&quot;hhsnapfam171&quot;,&quot;hhsnapfam2711mile&quot;,&quot;hh711mile&quot;,&quot;hhsnapfam2713mile&quot;,&quot;hh713mile&quot;)]</code></pre>
+<p>When we look at the names of the variables, we notice that they are not very helpful in describing the variables themselves. Let’s rename the variables to make our analysis easier.</p>
 <pre class="r"><code># Check variable names of data
 names(data)</code></pre>
 <pre><code>##  [1] &quot;tr10fips&quot;          &quot;STUDYID&quot;           &quot;Q5&quot;               
@@ -341,6 +355,10 @@ names(data)[37] &lt;- &quot;nonfood_ben_other&quot; #Offer other types of non-fo
 
 # Rename number of clients served per month
 names(data)[38] &lt;- &quot;clients&quot;</code></pre>
+</div>
+<div id="create-new-variables" class="section level5">
+<h5>Create New Variables</h5>
+<p>We will also</p>
 <pre class="r"><code># Generate poverty rate variables
 data &lt;- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within tract
 data &lt;- mutate(data, pov_rate1 = povpop_1m / povpopd711mile) #Rate within 1 mile

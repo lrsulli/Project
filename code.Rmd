@@ -115,7 +115,7 @@ data = data.frame(data) #convert to data frame
 
 #####Import Census Data
 
-We now need to import the Census data so we can analyze the demographics of the populations that the providers serve. This data comes in Stata or dta files which are also stored in Github. We import them the same way as the survey data, just with a different extension. Again, we will temporairly dowload each file and store them separately in different data frames.  
+We now need to import the Census data so we can analyze the demographics of the populations that the providers serve. This data comes in Stata, or .dta, files which are also stored in Github. We import them the same way as the survey data, just with a different extension. Again, we will temporairly dowload each file and store them separately in different data frames.  
 
 ```{r Import Data: Census 1, warning=FALSE, message=FALSE}
 # Import first of three census data files
@@ -146,8 +146,9 @@ data_census3 = read.dta13(temp) #get data
 
 #####Merge Census Data
 
+We then need to merge the census data files together as they contain different demographic variables that we need. We will again merge the data frames on a similar variable. For the census data frames this variable will be the census tract number. Then, to add the demographic variables to the survey data we will use the Study ID variable again, as it is included in one of the census data files.  
 
-
+First, merge the census data frames:
 
 ```{r Merge Data: Census, warning=FALSE, message=FALSE}
 # Merge first two census data files (Census1 and Census2)
@@ -159,6 +160,8 @@ data_census = merge(data_census, data_census3, by="tr10fips", all=T) #keep all t
 data_census = data.frame(data_census) #convert to data frame
 ```
 
+Then add the census data to the survey data (note that the census data contains all census tracts in Michigan, but we only need the tracts that have food providers in them):
+
 ```{r Merge Data: Census with Survey Data, warning=FALSE, message=FALSE}
 # Merge Census data and survey data
 data = merge(data, data_census, by='STUDYID') #only keep tracts that have organizations
@@ -166,10 +169,16 @@ data = merge(data, data_census, by='STUDYID') #only keep tracts that have organi
 data = data.frame(data) #convert to data frame
 ```
 
+#####Clean Data Set
+
+Let's check to see what we have:
+
 ```{r Check Variable Names, warning=FALSE, message=FALSE, eval=FALSE}
 # Check variable names of data
 names(data)
 ```
+
+We don't need all of these variables for our analysis. To make things simpler, we will only keep what we need. We will also make a copy of the original data frame just in case we miss something and want to come back and get it later.
 
 ```{r Drop Variables, warning=FALSE, message=FALSE}
 # Create a copy of original data set
@@ -178,6 +187,8 @@ data_copy = data
 # Only keep necessary variables
 data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','Street.Address','City','State','Zip','County','povpop10071','povpopd71','povpop_1m',"povpopd711mile","povpop_3m","povpopd713mile","nhwht71","pop71","nhwht711mile","nhwht713mile","blk71","blk711mile","blk713mile","hsp71","hsp711mile","hsp713mile","hhsnapfam271","hhsnapfam171","hhsnapfam2711mile","hh711mile","hhsnapfam2713mile","hh713mile")]
 ```
+
+When we look at the names of the variables, we notice that they are not very helpful in describing the variables themselves. Let's rename the variables to make our analysis easier.
 
 ```{r Rename Variables, warning=FALSE, message=FALSE}
 # Check variable names of data
@@ -233,6 +244,10 @@ names(data)[37] <- "nonfood_ben_other" #Offer other types of non-food related be
 # Rename number of clients served per month
 names(data)[38] <- "clients"
 ```
+
+#####Create New Variables
+
+We will also 
 
 ```{r Generate Census Variables, warning=FALSE, message=FALSE}
 # Generate poverty rate variables
