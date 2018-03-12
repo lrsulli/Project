@@ -1,11 +1,19 @@
 ---
-title: "Final Project"
-last updated: 3/5/18
+title: "Final Project - MASTER"
+last updated: 3/12/18
 ---
+
+###The Organizational Structure and Capacity of Emergency Food Assistance Providers in the Detorit Metropolitan Area
+####Data Cleaning and Analysis Tutorial
+
+This tutorial will lead you through the steps of cleaning and analyzing survey data in R. This analysis is a part of a larger research examining the organizing structure and capacity of food pantries.
+
+#####About the Data
+The data used for this tutuorial is from a survey on emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. Also, we will use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of  programs offered, geographic location, and demographic characteristics.
 
 ```{r Setup, warning=FALSE, message=FALSE}
 # Libraries
-library(readxl)
+library(readxl) #used
 library(dplyr)
 library(moments)
 library(stringr)
@@ -30,6 +38,10 @@ getMode = function(aColumn){
 ```
 
 ```{r Import Data: Initial, warning=FALSE, message=FALSE}
+# Load library
+# First time you need to install "readxl": install.packages("readxl")
+library(readxl)
+
 # Import initial survey responses from 2_15_13
 temp = tempfile(fileext = '.xlsx') #extension for Excel fie
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/fp_survey_2_15_13.xlsx" #link to data
@@ -39,6 +51,9 @@ data_initial = read_excel(temp, sheet = 1) #get data
 ```
 
 ```{r Import Data: Recodes, warning=FALSE, message=FALSE}
+# Load library
+library(readxl)
+
 # Recode file for Q12 and Q22 to Q25
 temp = tempfile(fileext = '.xlsx') #extension for Excel fie
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/recode_Q12_Q22toQ25.xlsx" #link to data
@@ -48,6 +63,9 @@ data_recode = read_excel(temp, sheet = 1) #get data
 ```
 
 ```{r Import Data: Addresses, warning=FALSE, message=FALSE}
+# Load library
+library(readxl)
+
 # Address list data file
 temp = tempfile(fileext = '.xlsx') #extension for Excel fie
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/address_list_5_20_13.xlsx" #link to data
