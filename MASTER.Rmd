@@ -1,6 +1,6 @@
 ---
 title: "Final Project - MASTER"
-last updated: 3/12/18
+last updated: 3/13/18
 ---
 
 ###Data Cleaning and Analysis Tutorial
@@ -42,7 +42,7 @@ The survey data comes in three different Excel files: inital responses from 2/15
 
 #####Import Survey Data
 
-First we need to import the survey data. We will use the "readxl" package, so make sure this package is installed the first time you use it. We will import the three Excel files individually and place them in separate in data frames.
+First we need to import the survey data. We will use the "readxl" package, so make sure this package is installed the first time you use it. We will import the three Excel files individually and place them in separate data frames.
 
 ```{r Import Data: Initial, warning=FALSE, message=FALSE}
 # Load library
@@ -83,7 +83,7 @@ data_address = read_excel(temp, sheet = 1) #get data
 
 #####Merge Survey Data
 
-Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a "Study ID" was given to each provider when they answered the surveyed. We will merge using this identifyer. We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simplier.  
+Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a unique "STUDYID" was given to each provider when they were surveyed. We will merge using this identifyer. We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simplier.  
 
 First, we will merge the intial survey responses with the recode file:
 
@@ -146,7 +146,7 @@ data_census3 = read.dta13(temp) #get data
 
 #####Merge Census Data
 
-We then need to merge the census data files together as they contain different demographic variables that we need. We will again merge the data frames on a similar variable. For the census data frames this variable will be the census tract number. Then, to add the demographic variables to the survey data we will use the Study ID variable again, as it is included in one of the census data files.  
+We then need to merge the census data files together as they contain different demographic variables that we need. We will again merge the data frames on a similar variable. For the census data frames this variable will be the census tract number. Then, to add the demographic variables to the survey data we will use the STUDYID variable again, as it is included in one of the census data files.  
 
 First, merge the census data frames:
 
@@ -178,7 +178,7 @@ Let's check to see what we have:
 names(data)
 ```
 
-We don't need all of these variables for our analysis. To make things simpler, we will only keep what we need. We will also make a copy of the original data frame just in case we miss something and want to come back and get it later.
+We don't need all of these variables for our analysis. To make things simpler, we will only keep what we need. We will also make a copy of the original data frame just in case we miss something and want to go back and get it later.
 
 ```{r Drop Variables, warning=FALSE, message=FALSE}
 # Create a copy of original data set
@@ -247,37 +247,37 @@ names(data)[38] <- "clients"
 
 #####Create New Variables
 
-We will also 
+We will need some of our demographic variables as rates for our analysis. To do this, we need to create new variables using the "mutate" function. We will add these to our main data frame.
 
 ```{r Generate Census Variables, warning=FALSE, message=FALSE}
 # Generate poverty rate variables
-data <- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within tract
+data <- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within census tract
 data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile) #Rate within 1 mile
 data <- mutate(data, pov_rate3 = povpop_3m / povpopd713mile) #Rate within 3 miles
 
 # Reconicle naming discrepancies between census data sets
 # Will use poverty rate within 1 mile for missing within tract poverty rates
-data_census$povpop10071[is.na(data_census$povpop10071)] <- 0 #Convert NA's to 0
+data_census$povpop10071[is.na(data_census$povpop10071)] <- 0 #Convert NA's to 0's
 
 data_census <- mutate(data_census, pov_rateT = ifelse(povpop10071==0, povpop100711mile / povpopd711mile, povpop10071 / povpopd71)) #Replace missing values with the correct rate
 
 # Generate White demographic variables
-data <- mutate(data, white_rateT = nhwht71 / pop71) #Rate within tract
+data <- mutate(data, white_rateT = nhwht71 / pop71) #Rate within census tract
 data <- mutate(data, white_rate1 = nhwht711mile / povpopd711mile) #Rate within 1 mile
 data <- mutate(data, white_rate3 = nhwht713mile / povpopd713mile) #Rate within 3 miles
 
 # Gnerate Black demographic variables
-data <- mutate(data, black_rateT = blk71 / pop71) #Rate within tract
+data <- mutate(data, black_rateT = blk71 / pop71) #Rate within census tract
 data <- mutate(data, black_rate1 = blk711mile / povpopd711mile) #Rate within 1 mile
 data <- mutate(data, black_rate3 = blk713mile / povpopd713mile) #Rate within 3 miles
 
 # Generate Hispanic demographic variables
-data <- mutate(data, hisp_rateT = hsp71 / pop71) #Rate within tract
+data <- mutate(data, hisp_rateT = hsp71 / pop71) #Rate within census tract
 data <- mutate(data, hisp_rate1 = hsp711mile / povpopd711mile) #Rate within 1 mile
 data <- mutate(data, hisp_rate3 = hsp713mile / povpopd713mile) #Rate within 3 miles
 
 # Generate SNAP rates
-data <- mutate(data, snap_rateT = hhsnapfam271 / hhsnapfam171) #Rate within tract
+data <- mutate(data, snap_rateT = hhsnapfam271 / hhsnapfam171) #Rate within census tract
 data <- mutate(data, snap_rate1 = hhsnapfam2711mile / hh711mile) #Rate within 1 mile
 data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile) #Rate within 3 miles
 ```
