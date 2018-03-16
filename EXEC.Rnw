@@ -91,40 +91,11 @@ stargazer(tableF,title = "Distribution of Non-Food Related Benefit Programs",
 Here you can explain how to get the data:
 
 <<MapData, echo=FALSE, warning=FALSE, message=FALSE>>=
-addresses=read.csv("https://github.com/lrsulli/Project/raw/master/geocoded_addresses.csv")
-
-# Link to map
-compressedMap= "https://github.com/lrsulli/Project/raw/master/map/2010_Census_Tracts_v17a.zip"
-
-# Unzip compressed map folder
-temp=tempfile()
-download.file(compressedMap, temp)
-unzip(temp)
-
-# Determine which shapefiles are in folder
-(maps = list.files(pattern = 'shp'))
-
-# Load library
-library(rgdal)
-
-# Select the map
-tractMap <- readOGR("2010_Census_Tracts_v17a.shp", stringsAsFactors=F)
-
-# Change LINK (FIPS code) variable into an interger
-tractMap$NAME=as.numeric(tractMap$LINK)
-
-# Keep Wayne, Macomb, Oakland, and Washtenaw Counties (FIPS = 163, 099, 125, and 161)
-map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125' | CNTY_CODE=='161')
-
-# We only need one observation per census tract
-data_counties = data_census[!duplicated(data_census[c('tract_short')]),] #drop duplicate tracts
-
-# Merge map data with census data
-map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short', all.x=F)
+map_counties=read.csv("https://github.com/lrsulli/Project/raw/master/map_counties.csv")
 @
 
-<<NonFoodBenTable, echo=FALSE, results=tex, warning=FALSE, message=FALSE>>=
-# Want to plot within tract poverty rate
+<<Mapping, echo=FALSE, warning=FALSE, message=FALSE, fig=true, width=6, height=4>>=
+
 varToPLot=map_counties$pov_rateT
 
 library(RColorBrewer)
