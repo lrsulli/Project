@@ -1,6 +1,6 @@
 ---
 title: "Final Project - MASTER"
-last updated: 3/13/18
+last updated: 3/15/18
 ---
 
 ###Data Cleaning and Analysis Tutorial
@@ -9,32 +9,6 @@ This tutorial will lead you through the steps of cleaning and analyzing survey d
   
 #####About the Data  
 The data used for this tutuorial is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
-
-```{r Setup, warning=FALSE, message=FALSE}
-# Libraries
-library(readxl) #used
-library(dplyr)
-library(moments)
-library(stringr)
-library(scales)
-library(ggplot2)
-library(jsonlite)
-library(utils)
-library(rgdal)
-library(readstata13)
-library(RColorBrewer)
-library(classInt)
-library(ggmap)
-library(googleway)
-library(pander)
-
-# Functions
-getMode = function(aColumn){
-  freqTable=table(aColumn)
-  maxFrequency=max(freqTable)
-  names(freqTable[freqTable==maxFrequency])
-}
-```
 
 ####Step 1: Create Dataset
 
@@ -118,6 +92,10 @@ data = data.frame(data) #convert to data frame
 We now need to import the Census data so we can analyze the demographics of the populations that the providers serve. This data comes in Stata, or .dta, files which are also stored in Github. We import them the same way as the survey data, just with a different extension. Again, we will temporairly dowload each file and store them separately in different data frames.  
 
 ```{r Import Data: Census 1, warning=FALSE, message=FALSE}
+# Load library
+# Make sure this package is installed the first time you run the code
+library(readstata13)
+
 # Import first of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_17.dta" #link to data
@@ -127,6 +105,9 @@ data_census1 = read.dta13(temp) #get data
 ```
 
 ```{r Import Data: Census 2, warning=FALSE, message=FALSE}
+# Load library
+library(readstata13)
+
 # Import second of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL <- "https://github.com/lrsulli/Project/raw/master/Census_Data%204_28_17.dta" #link to data
@@ -136,6 +117,9 @@ data_census2 = read.dta13(temp) #get data
 ```
 
 ```{r Import Data: Census 3, warning=FALSE, message=FALSE}
+# Load library
+library(readstata13)
+
 # Import third of three census data files
 temp = tempfile(fileext = '.dta') #extension for Stata data file
 dataURL<-"https://github.com/lrsulli/Project/raw/master/tract10detroit_povertypop_123mile.dta" #link to data
@@ -247,19 +231,25 @@ names(data)[38] <- "clients"
 
 #####Create New Variables
 
-We will need some of our demographic variables as rates for our analysis. To do this, we need to create new variables using the "mutate" function. We will add these to our main data frame.
+We will need to turn some of our demographic variables into rates for our analysis. To do this, we will create new variables using the "mutate" function. Also, because some of the census tracts are missing within tract poverty demographics, we will instead use the 1-mile estimates for these tracts. We will add these to our main data frame.
 
 ```{r Generate Census Variables, warning=FALSE, message=FALSE}
-# Generate poverty rate variables
-data <- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within census tract
-data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile) #Rate within 1 mile
-data <- mutate(data, pov_rate3 = povpop_3m / povpopd713mile) #Rate within 3 miles
+# Load library
+# Make sure this package is installed the first time you run the code
+library(dplyr)
 
-# Reconicle naming discrepancies between census data sets
+# Check for missing poverty demographic variables
+sum(is.na(data_census$povpop10071)) #there are 962 missing values
+
 # Will use poverty rate within 1 mile for missing within tract poverty rates
 data_census$povpop10071[is.na(data_census$povpop10071)] <- 0 #Convert NA's to 0's
 
 data_census <- mutate(data_census, pov_rateT = ifelse(povpop10071==0, povpop100711mile / povpopd711mile, povpop10071 / povpopd71)) #Replace missing values with the correct rate
+
+# Generate poverty rate variables
+data <- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within census tract
+data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile) #Rate within 1 mile
+data <- mutate(data, pov_rate3 = povpop_3m / povpopd713mile) #Rate within 3 miles
 
 # Generate White demographic variables
 data <- mutate(data, white_rateT = nhwht71 / pop71) #Rate within census tract
@@ -282,97 +272,193 @@ data <- mutate(data, snap_rate1 = hhsnapfam2711mile / hh711mile) #Rate within 1 
 data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile) #Rate within 3 miles
 ```
 
+It will also be helpful to keep only the counties in the Detroit Metropolitan area, instead of the entire state. However, the census identifying numbers (or FIPS codes) in the data are "tr10fips" which include the state, county, and tract FIPS numbers in one long 10-digit number. We want to create a new variable for just the 3-digit county FIPS code. Later, we will use this new variable for mapping.
+
 ```{r Generate County FIPS Variables, warning=FALSE, message=FALSE}
 # Need county FIPS variable to focus analysis on Detroit metro area
+# We will create this variable in both our main data frame and the complete census data
 
 # Prepare to split census tract identifyer
+# Identify the variable types
 str(data$tract)
 str(data_census$tr10fips)
+# They are both character variables so we can continue with the subtr() function
 
-# Create fips number without state identifier (first two digits)
-data <- mutate(data, tract_short = substr(tract, 3, 11))
-data_census <- mutate(data_census, tract_short = substr(tr10fips, 3, 11))
+# Create variable with the county and tract fips number by removing the state FIPS number (first 2 digits))
+data <- mutate(data, tract_short = substr(tract, 3, 11)) #keep the 3rd through 11th digits
+data_census <- mutate(data_census, tract_short = substr(tr10fips, 3, 11)) #keep the 3rd through 11th digits
 
 # Create county FIPS code variable
-data <- mutate(data, county_fips = substr(tract, 3, 5))
-data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5))
+data <- mutate(data, county_fips = substr(tract, 3, 5)) #keep the 3rd through 5th digits
+data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5)) #keep the 3rd through 5th digits
 ```
 
-### EXPLORING DICHOTOMOUS DATA
+####Step 2: Explore the Data
 
-#### Meal Programs
+Now that we have our data how we want it, let's do some basic analysis. We will look at the dichotomous and continuous variables seperately.
+
+#####Explore Dichotomous Variables
+
+We want to determine the prevelance of each type of program or how many food providers offer each major type of program. These variables have simple dichotomous, yes/no, responses. We will use basic functions within R to calculate the statistics and a package called "pander" to format our tables.  
+
+#####Meal Programs
+
+Meal programs include the following services: hot meals, hom delivered meals, community kitchens, and meals for children.  
+
+First, the distribution of meal programs:
 
 ```{r Meals: Distribution, warning=FALSE, message=FALSE}
+# Load library
+# Make sure this package is installed the first time you run the code
+library(pander)
+
 # Distribution of values
 pander(table(data$meals), stlye = 'rmarkdown', caption = "Number of food pantries offering meal programs.")
 ```
 
+And the frequency of meal programs:
+
 ```{r Meals: Frequencies, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Relative Frequencies
 pander((prop.table(table(data$meals)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering meal programs.", digits = 3)
 ```
 
-#### Groceries
+These results show us that 74 food providers, or 30.3% of those surveyed, offer meal programs to their client. On the other hand, a majority or 69.7% representing 170 organizations, do not offer meal programs.
+
+#####Grocery Programs
+
+Grocery programs include the following services: food pantries, backpack programs, home delivered groceries, mobile pantries or markets, suppling food to other programs, or community gardens.  
+
+The ditribution of grocery programs is:
 
 ```{r Groceries: Distribution, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Distribution of values
 pander(table(data$groceries), stlye = 'rmarkdown', caption = "Number of food pantries offering grocery programs.")
 ```
 
+And the frequency of grocery programs is:
+
 ```{r Groceries: Frequencies, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Relative Frequencies
 pander((prop.table(table(data$groceries)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering grocery programs.", digits = 3)
 ```
 
-#### Food Related Benefits
+This analysis tells us that grocery programs are more prevelant than meal programs. This trend is seen through 91.0%, or 222 organizations, offering grocery programs compared to just 30.3% offering meal programs.
+
+#####Food Related Benefits
+
+Food related benefits include the following services: Supplemental Nutrition Assistance Program (SNAP), Women, Infant, and Children (WIC), school lunch or breakfast, and gift cards or vouchers.  
+
+First we look at the basic distribution of food related benefit programs:
 
 ```{r Food Benefits: Distribution, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Distribution of values
 pander(table(data$food_ben), stlye = 'rmarkdown', caption = "Number of food pantries offering food-related benefits.")
 ```
 
+Then we look at the frequency of food related benefit programs:
+
 ```{r Food Benefits: Frequencies, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Relative Frequencies
 pander((prop.table(table(data$food_ben)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering food-related benefits.", digits = 3)
 ```
 
-#### Non-Food Related Benefits
+We can see that about half, or 49.2%, of surveyed organizations offer food related benefits to their clients.
+
+#####Non-Food Related Benefits
+
+Non-food related benefits include the following serivces: job training, houing assistance, utility assistance, legal assistance, GED or other education programs, healthcare, counseling, transportation services, clothing or furniture, referrals to other programs, Medicaid or CHIP, and financial assistance.  
+
+Here is the basic distribution of non-food related benefits:
 
 ```{r Non-Food Benefits: Distribution, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Distribution of values
 pander(table(data$nonfood_ben), stlye = 'rmarkdown', caption = "Number of food pantries offering non-food related benefits.")
 ```
 
+And here is the frequency of non-food related benefit programs:
+
 ```{r Non-Food Benefits: Frequencies, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Relative Frequencies
 pander((prop.table(table(data$nonfood_ben)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering non-food related benefits.", digits = 3)
 ```
 
-### EXPLORING COUNT VARIABLES
+This part of the analysis shows us the high prevlance of non-food realted benefits within the emergency food assistance network, suggesting the potentially larger role these organizations play in the social safety net. 76.2% of surveyed organizations provide some form of non-food related benefits, while only 23.4% did not provide any of these types of services, and 0.4% (or 1 pantry) did not know or refused to answer the question.
 
-#### Average Number of Clients Served per Month
+#####Explore Countinuous Variables
+
+We will now look at how to complete a basic analysis of a continuous variable.
+
+#####Average Number of Clients Served per Month
+
+We will look at the average number of clients served per month. This value is self-reported by the organizations on the survey. When a range was given, the mean of the two numbers was used.  
+
+First, we will look at the centrality of the variable:
 
 ```{r Clients: Centrality, warning=FALSE, message=FALSE}
+# Load library
+library(pander)
+
 # Centrality
 pander(summary(data$clients), style = 'rmarkdown', caption = "Average number of clients served per month.")
 ```
 
+We will then use a histogram to visualize the data. Due to the large range and skewness of the variable we will take the log of the variable in order to better visualize the data.
+
 ```{r Clients: Histogram, warning=FALSE, message=FALSE}
+# Load library
+# Make sure this package is installed the first time you run the code
+library(ggplot2)
+
 # Histogram
 ggplot(data, aes(x=data$clients)) +
-  geom_histogram(color = "#1F3552", fill = "#4271AE") +
-  scale_x_log10() +
+  geom_histogram(color = "#1F3552", fill = "#4271AE") + #blue color
+  scale_x_log10() + #log of variable
   scale_y_continuous() +
-  labs(title="Clients Served") +
-  labs(x="Log of the Average Number of Clients Served per Month", y="Count")
+  labs(title="Clients Served") + #title of plot
+  labs(x="Log of the Average Number of Clients Served per Month", y="Count") #x-axis label
 ```
 
-### Mapping
+####Step 3: Map the Data
+
+Our main analysis will be examining spatial mismatch theory in light of our survey results. Spatial mismatch theory is often applied to access to employment, but can also be used to explore access to assistance and other resources. In general, the theory states that one cause of poverty is that resources (or employment, assistance, etc.) are not located in areas where low-income individuals live. To explore this theory, we will plot a map of poverty rates and the location of the food providers. In order to best help those in need, idealy these organizations will be located in the communities with the highest pvoerty rates.  
+
+In order to complete this analysis we will create a map using a shapefile, geocode the food pantry locations, and create a final map overlaying the two.  
+
+#####Getting the Map
+
+First we need to locate a map:
 
 ```{r Map Link, warning=FALSE, message=FALSE}
+# I found a shapefile of the state of Michigan broken up by census tract
+# I saved these files in a compresses folder in Github
+
 # Link to map
 compressedMap= "https://github.com/lrsulli/Project/raw/master/map/2010_Census_Tracts_v17a.zip"
 ```
+
+Then we need to unzip the compressed file:
 
 ```{r Unzip Map, warning=FALSE, message=FALSE}
 # Unzip compressed map folder
@@ -381,23 +467,36 @@ download.file(compressedMap, temp)
 unzip(temp)
 ```
 
+And determine the name of the shapefile we want to plot:
+
 ```{r Shapefiles, warning=FALSE, message=FALSE}
 # Determine which shapefiles are in folder
 (maps = list.files(pattern = 'shp'))
 ```
 
+We need to select the correct map file using the package "rgdal" so we can map it later:
+
 ```{r Select Map, warning=FALSE, message=FALSE}
+# Load library
+# Make sure this package is installed the first time you run the code
+library(rgdal)
+
 # Select the map
-tractMap <- rgdal::readOGR("2010_Census_Tracts_v17a.shp", stringsAsFactors=F)
+tractMap <- readOGR("2010_Census_Tracts_v17a.shp", stringsAsFactors=F)
 ```
+
+We need to explore the shapefile we selected so we know what we are working with:
 
 ```{r Explore Map Data, warning=FALSE, message=FALSE}
 names(tractMap) #check variable names
 str(tractMap$LINK) #check LINK (FIPS code) variable type
 
+# The census tract number is a character, but we need it in numeric form
 # Change LINK (FIPS code) variable into an interger
 tractMap$NAME=as.numeric(tractMap$LINK)
 ```
+
+We do not need to map the entire state so let's just select the counties in the Detroit Metro area. We can do this using the county FIPS codes we created earlier. At this point we will also merge the map files with our census data so we can plot the poverty rates later.
 
 ```{r Select Counties, warning=FALSE, message=FALSE}
 # Only need counties where pantries are located (Detroit metro area)
@@ -405,19 +504,30 @@ tractMap$NAME=as.numeric(tractMap$LINK)
 # Keep Wayne, Macomb, Oakland, and Washtenaw Counties (FIPS = 163, 099, 125, and 161)
 map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125' | CNTY_CODE=='161')
 
+# We only need one observation per census tract
 data_counties = data_census[!duplicated(data_census[c('tract_short')]),] #drop duplicate tracts
 
 # Merge map data with census data
 map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short', all.x=F)
 ```
 
+Let's check to see that we have the correct area:
+
 ```{r Check County Map, warning=FALSE, message=FALSE}
 # Check map to determine if correct counties selected
 plot(map_counties, col='black')
 ```
 
+Now we will geocode the organization locations using the addresses provided. We will do this using code from https://qanda.science/r/3956223_batch-geocoding-with-googleway-r-how-to.jsp and the googleway package. You will need to get a Google API key before compelting this step. All directions can be found at the link provided.  
+
+First, we have to make sure that our address variable is formated correctly. Then, we will geocode the addresses which will return the latitude and longitude coordiantes that will need to be formatted into their own variables. Geocoding takes a long time so after compeleting this step once I recommend writing the output to a csv file, with the STUDYID's, and then working from that csv file. We can then turn the code chunk off so it will not run when we knit the document by adding "eval=FALSE" to the beginning of the chunk.
+
 ```{r Geocoding, eval=FALSE, warning=FALSE, message=FALSE}
 # Only ran once because it takes awhile, wrote into an .csv file and put in Github repo
+
+# Load library
+# Make sure this package is installed the first time you run the code
+library(googleway)
 
 # Prepare data_address data frame
 data_address$address <- do.call(paste, c(data_address[c("Street Address", "City", "State")], sep = ",")) #correct single line address format
@@ -454,6 +564,8 @@ map_address = map_address[,c('STUDYID','lat','lon')]
 write.csv(map_address, "geocoded_addresses.csv") #saved to Github repo
 ```
 
+We need to import the csv file of latitude and longitude we just created and ensure our variables are the correct type:
+
 ```{r Import Data: Geocoded Addresses, warning=FALSE, message=FALSE}
 temp = tempfile(fileext = '.csv') #extension for Excel file
 dataURL <- "https://raw.githubusercontent.com/lrsulli/Project/master/geocoded_addresses.csv" #link to data
@@ -466,12 +578,21 @@ map_address$lat = as.character(map_address$lat)
 map_address$lon = as.character(map_address$lon) 
 ```
 
+No we can get the map specifications. First, we want to plot the within tract poverty rates:
+
 ```{r Select Variable, warning=FALSE, message=FALSE}
 # Want to plot within tract poverty rate
 varToPLot=map_counties$pov_rateT
 ```
 
+Then we can set the intervals and color sheme for the color ramp for the poverty rates:
+
 ```{r Plot Characteristics, warning=FALSE, message=FALSE}
+# Load librarys
+# Make sure these packages are installed the first time you run the code
+library(RColorBrewer)
+library(classInt)
+
 # Number of intervals
 numberOfClasses = 5 
 
@@ -485,6 +606,8 @@ intervals <- classIntervals(varToPLot, numberOfClasses,
 colorPallette <- findColours(intervals, colors)
 ```
 
+Now we can map:
+
 ```{r Plot, warning=FALSE, message=FALSE}
 #Plot characteristics
 legendText="Poverty Rate" #legend title
@@ -495,10 +618,16 @@ shrinkPoints=0.35 #point size
 plot(map_counties, col = 'grey') #plot background map (tracts without pantries)
 plot(map_counties, col = colorPallette, main=title,border='black',add=T) #plot poverty rates
 
-legend('topright', legend = names(attr(colorPallette, "table")), 
-       fill = attr(colorPallette, "palette"), cex = shrinkLegend, 
-       bty = "n",
-       title=legendText)
+title(main=title)
 
-points(map_address$lon, map_address$lat, col = "red", pch =19, cex = shrinkPoints) #add pantry locations
+legend('topright', #location of legend
+       fill = attr(colorPallette, "palette"), 
+       cex = shrinkLegend, 
+       bty = "n",
+       title=legendText,
+       legend = c("0% - 6%", "6% - 11%", "11% - 18%", "18% - 35%", "35% - 100%")) #legend text
+
+points(map_address$lon, map_address$lat, col = "red", pch =19, cex = shrinkPoints) #add organization locations
 ```
+
+For the most part, this map shows that the emergency food assistance providers are located in areas with higher poverty rates. However, further more advanced spatial analysis would need to be concluded to confirm this trend.
