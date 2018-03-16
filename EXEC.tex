@@ -1,0 +1,100 @@
+\documentclass[11pt]{article}
+
+\usepackage{apacite}
+
+\title{The Organizational Structure and Capacity of Emergency Food Assistance Provdiers in the Detroit Metropolitan Area}
+\author{
+        Laura Sullivan\\
+        Evans School of Public Policy and Governance\\
+        University of Washington\\
+        Seattle, WA 98115, \underline{United States}\\
+        \texttt{lrsulli@uw.edu}
+}
+\date{\today}
+
+
+\usepackage{Sweave}
+\begin{document}
+\input{EXEC-concordance}
+
+\maketitle
+
+
+\begin{abstract}
+Food insecurity is an issue facing many households in the United States. It often disproportionately affects already vulnerable populations and often further exacerbates the cycle of poverty. Emergency food assistance programs serve as a key resource for many food insecure persons. However, the complexity of these agencies is not well studied. Despite the prevalence of food pantries, there is relatively little work that seeks to understand how these organizations operate. This report aims to help fill that void by examining the organizational structure and capacity of emergency food assistance providers in the greater Detroit area. Using unique survey data of food pantries in metro Detroit gathered from 2012 to 2013. I found that 90.6 percent of surveyed agencies provide groceries while only 27.5 percent have meal programs. Also, 75.8 percent of agencies provide non-food related benefits such as help with housing or counseling services. This result depicts the role food pantries play in the larger safety net.
+\end{abstract}
+
+\section{Data}\label{intro}
+The data for this report is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this report, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
+
+\begin{Schunk}
+\begin{Soutput}
+ [1] "ID Number"                                                                                                              
+ [2] "Q12 - About how many unique individual clients did you serve in your food assistance programs in the most recent month?"
+ [3] "Q12 Detail"                                                                                                             
+ [4] "Q12 Don't Know/Refuse"                                                                                                  
+ [5] "Q12RC"                                                                                                                  
+ [6] "Q12RC Notes/Questions"                                                                                                  
+ [7] "Q22 - Do you have any paid staff at your site (including yourself)?"                                                    
+ [8] "Q23 - How many paid full-time staff?  (Number)"                                                                         
+ [9] "Q23 Detail"                                                                                                             
+[10] "Q23 Don't Know/Refuse"                                                                                                  
+[11] "Q24 - How many paid part-time staff?  (Number)"                                                                         
+[12] "Q24 Detail"                                                                                                             
+[13] "Q24 Don't Know/Refuse"                                                                                                  
+[14] "Q22RC"                                                                                                                  
+[15] "Q22RC Notes/Questions"                                                                                                  
+[16] "Q25 - How many volunteer hours support this program in an average week? (Number)"                                       
+[17] "Q25 Detail"                                                                                                             
+[18] "Q25 Don't Know/Refuse"                                                                                                  
+[19] "Q25RC"                                                                                                                  
+[20] "Q25RC Notes/Questions"                                                                                                  
+[21] "Initial Attempt at Q25RC"                                                                                               
+\end{Soutput}
+\end{Schunk}
+
+
+\begin{Schunk}
+\begin{Soutput}
+ [1] "tr10fips"          "STUDYID"           "Q5"               
+ [4] "Q6_1"              "Q6_2"              "Q6_3"             
+ [7] "Q6_4"              "Q6_5"              "Q7"               
+[10] "Q8_1"              "Q8_2"              "Q8_3"             
+[13] "Q8_4"              "Q8_5"              "Q8_6"             
+[16] "Q8_7"              "Q8_8"              "Q9"               
+[19] "Q10_1"             "Q10_2"             "Q10_3"            
+[22] "Q10_4"             "Q10_5"             "Q14"              
+[25] "Q15_1"             "Q15_2"             "Q15_3"            
+[28] "Q15_4"             "Q15_5"             "Q15_6"            
+[31] "Q15_7"             "Q15_8"             "Q15_9"            
+[34] "Q15_10"            "Q15_11"            "Q15_12"           
+[37] "Q15_13"            "Q12RC"             "Street.Address"   
+[40] "City"              "State"             "Zip"              
+[43] "County"            "povpop10071"       "povpopd71"        
+[46] "povpop_1m"         "povpopd711mile"    "povpop_3m"        
+[49] "povpopd713mile"    "nhwht71"           "pop71"            
+[52] "nhwht711mile"      "nhwht713mile"      "blk71"            
+[55] "blk711mile"        "blk713mile"        "hsp71"            
+[58] "hsp711mile"        "hsp713mile"        "hhsnapfam271"     
+[61] "hhsnapfam171"      "hhsnapfam2711mile" "hh711mile"        
+[64] "hhsnapfam2713mile" "hh713mile"        
+\end{Soutput}
+\begin{Soutput}
+[1] 962
+\end{Soutput}
+\begin{Soutput}
+ chr [1:244] "26163530100" "26163530800" "26163516800" ...
+\end{Soutput}
+\begin{Soutput}
+ chr [1:1206] "26099206700" "26099206700" "26099210000" ...
+\end{Soutput}
+\end{Schunk}
+
+\section{Program Offerings}\label{outline}
+
+Sections may use a label\footnote{In fact, you can have a label wherever you think a future reference to that content might be needed.}. This label is needed for referencing. For example the next section has label \emph{datas}, so you can reference it by writing: As we see in section \ref{datas}.
+
+\begin{Schunk}
+\begin{Sinput}
+> library(stargazer)
+> stargazer(data$Meals,title = "Mean and Spread values", label = "measures")

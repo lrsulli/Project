@@ -1,0 +1,340 @@
+\documentclass[11pt]{article}
+
+\usepackage{apacite}
+
+\title{The Organizational Structure and Capacity of Emergency Food Assistance Provdiers in the Detroit Metropolitan Area}
+\author{
+        Laura Sullivan\\
+        Evans School of Public Policy and Governance\\
+        University of Washington\\
+        Seattle, WA 98115, \underline{United States}\\
+        \texttt{lrsulli@uw.edu}
+}
+\date{\today}
+
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\maketitle
+
+
+\begin{abstract}
+Food insecurity is an issue facing many households in the United States. It often disproportionately affects already vulnerable populations and often further exacerbates the cycle of poverty. Emergency food assistance programs serve as a key resource for many food insecure persons. However, the complexity of these agencies is not well studied. Despite the prevalence of food pantries, there is relatively little work that seeks to understand how these organizations operate. This report aims to help fill that void by examining the organizational structure and capacity of emergency food assistance providers in the greater Detroit area. Using unique survey data of food pantries in metro Detroit gathered from 2012 to 2013. I found that 90.6 percent of surveyed agencies provide groceries while only 27.5 percent have meal programs. Also, 75.8 percent of agencies provide non-food related benefits such as help with housing or counseling services. This result depicts the role food pantries play in the larger safety net.
+\end{abstract}
+
+\section{Data}\label{intro}
+The data for this report is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this report, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
+
+<<SurveyData, echo=FALSE, warning=FALSE, message=FALSE>>=
+# Load library
+# First time you need to install "readxl": install.packages("readxl")
+library(readxl)
+
+# Import initial survey responses from 2_15_13
+temp = tempfile(fileext = '.xlsx') #extension for Excel files
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/fp_survey_2_15_13.xlsx" #link to data
+download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
+
+data_initial = read_excel(temp, sheet = 1) #get data
+
+# Recode file for Q12 and Q22 to Q25
+temp = tempfile(fileext = '.xlsx') #extension for Excel fie
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/recode_Q12_Q22toQ25.xlsx" #link to data
+download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
+
+data_recode = read_excel(temp, sheet = 1) #get data
+
+# Address list data file
+temp = tempfile(fileext = '.xlsx') #extension for Excel fie
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/address_list_5_20_13.xlsx" #link to data
+download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
+
+data_address = read_excel(temp, sheet = 1) #get data
+
+# Prepare recode file
+names(data_recode) #Check names and see what the identifyer variable is called
+
+# We don't need all of these varaibles so we will only keep the necessary ones:
+data_recode = data_recode[,c(1,5:6,14:15,19:20)] #only keep necessary variables
+
+# Rename the identifyer variable so it matches the initial data set to keep things simplier:
+names(data_recode)[1] <- "STUDYID" #rename to match initial data set
+
+# Merge recode file with initial data set
+data = merge(data_initial, data_recode, by="STUDYID")
+
+# Prepare address list file
+names(data_address)[1] <- "STUDYID" #rename to match inital data set
+
+# Merge address list with initial data set and recodes
+data = merge(data, data_address, by="STUDYID")
+
+data = data.frame(data) #convert to data frame
+@
+
+<<CensusData, echo=FALSE, warning=FALSE, message=FALSE>>=
+# Load library
+# Make sure this package is installed the first time you run the code
+library(readstata13)
+
+# Import first of three census data files
+temp = tempfile(fileext = '.dta') #extension for Stata data file
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_17.dta" #link to data
+download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
+
+data_census1 = read.dta13(temp) #get data
+
+# Import second of three census data files
+temp = tempfile(fileext = '.dta') #extension for Stata data file
+dataURL <- "https://github.com/lrsulli/Project/raw/master/Census_Data%204_28_17.dta" #link to data
+download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
+
+data_census2 = read.dta13(temp) #get data
+
+# Import third of three census data files
+temp = tempfile(fileext = '.dta') #extension for Stata data file
+dataURL<-"https://github.com/lrsulli/Project/raw/master/tract10detroit_povertypop_123mile.dta" #link to data
+download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
+
+data_census3 = read.dta13(temp) #get data
+
+# Merge first two census data files (Census1 and Census2)
+data_census = merge(data_census1, data_census2, by="tr10fips", all=T) #keep all tracts
+
+# Merge third census data file (Census3 with Census1 and Census2)
+data_census = merge(data_census, data_census3, by="tr10fips", all=T) #keep all tracts
+
+data_census = data.frame(data_census) #convert to data frame
+
+data = merge(data, data_census, by='STUDYID') #only keep tracts that have organizations
+
+data = data.frame(data) #convert to data frame
+@
+
+<<CleanData, echo=FALSE, warning=FALSE, message=FALSE>>=
+# Create a copy of original data set
+data_copy = data
+
+# Only keep necessary variables
+data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','Street.Address','City','State','Zip','County','povpop10071','povpopd71','povpop_1m',"povpopd711mile","povpop_3m","povpopd713mile","nhwht71","pop71","nhwht711mile","nhwht713mile","blk71","blk711mile","blk713mile","hsp71","hsp711mile","hsp713mile","hhsnapfam271","hhsnapfam171","hhsnapfam2711mile","hh711mile","hhsnapfam2713mile","hh713mile")]
+
+# Check variable names of data
+names(data)
+
+# Rename identification variables
+names(data)[1] <- "tract"
+names(data)[2] <- "id"
+
+# Rename types of meal programs
+names(data)[3] <- "meals"
+names(data)[4] <- "hot_meals"
+names(data)[5] <- "home_meals" #Home delivered meals
+names(data)[6] <- "community_kitchen"
+names(data)[7] <- "child_meals"
+names(data)[8] <- "meal_other" #Offer other types of meal programs
+
+# Rename types of grocery programs
+names(data)[9] <- "groceries"
+names(data)[10] <- "pantry"
+names(data)[11] <- "backpack"
+names(data)[12] <- "home_groceries" #Home delivered groceries
+names(data)[13] <- "mobile_pantry"
+names(data)[14] <- "mobile_market"
+names(data)[15] <- "supply_other" #Supply food to other programs
+names(data)[16] <- "community_garden"
+names(data)[17] <- "groceries_other" #Offer other types of grocery programs
+
+# Rename types of food related benefit programs
+names(data)[18] <- "food_ben" #Offers food-related benefits
+names(data)[19] <- "snap"
+names(data)[20] <- "wic"
+names(data)[21] <- "school" #School lunch or breakfast
+names(data)[22] <- "gift" #Gift card or voucher
+names(data)[23] <- "food_ben_other" #Offer other types of food-related benefits
+
+# Rename types of non-food related benefit programs
+names(data)[24] <- "nonfood_ben" #Offers non-food related benefits
+names(data)[25] <- "job" #Job training or assistance
+names(data)[26] <- "house" #Housing assistance
+names(data)[27] <- "utility"
+names(data)[28] <- "legal"
+names(data)[29] <- "educ" #GED or education assistance
+names(data)[30] <- "health"
+names(data)[31] <- "counseling"
+names(data)[32] <- "trans" #Transportation assistance
+names(data)[33] <- "cloth" #Clothing or furniture
+names(data)[34] <- "ref" #Referrals to other programs
+names(data)[35] <- "medicaid" #Medicaid or CHIP
+names(data)[36] <- "money" #Financial, tax prep, budgeting
+names(data)[37] <- "nonfood_ben_other" #Offer other types of non-food related benefits
+
+# Rename number of clients served per month
+names(data)[38] <- "clients"
+
+# Load library
+# Make sure this package is installed the first time you run the code
+library(dplyr)
+
+# Check for missing poverty demographic variables
+sum(is.na(data_census$povpop10071)) #there are 962 missing values
+
+# Will use poverty rate within 1 mile for missing within tract poverty rates
+data_census$povpop10071[is.na(data_census$povpop10071)] <- 0 #Convert NA's to 0's
+
+data_census <- mutate(data_census, pov_rateT = ifelse(povpop10071==0, povpop100711mile / povpopd711mile, povpop10071 / povpopd71)) #Replace missing values with the correct rate
+
+# Generate poverty rate variables
+data <- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within census tract
+data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile) #Rate within 1 mile
+data <- mutate(data, pov_rate3 = povpop_3m / povpopd713mile) #Rate within 3 miles
+
+# Generate White demographic variables
+data <- mutate(data, white_rateT = nhwht71 / pop71) #Rate within census tract
+data <- mutate(data, white_rate1 = nhwht711mile / povpopd711mile) #Rate within 1 mile
+data <- mutate(data, white_rate3 = nhwht713mile / povpopd713mile) #Rate within 3 miles
+
+# Gnerate Black demographic variables
+data <- mutate(data, black_rateT = blk71 / pop71) #Rate within census tract
+data <- mutate(data, black_rate1 = blk711mile / povpopd711mile) #Rate within 1 mile
+data <- mutate(data, black_rate3 = blk713mile / povpopd713mile) #Rate within 3 miles
+
+# Generate Hispanic demographic variables
+data <- mutate(data, hisp_rateT = hsp71 / pop71) #Rate within census tract
+data <- mutate(data, hisp_rate1 = hsp711mile / povpopd711mile) #Rate within 1 mile
+data <- mutate(data, hisp_rate3 = hsp713mile / povpopd713mile) #Rate within 3 miles
+
+# Generate SNAP rates
+data <- mutate(data, snap_rateT = hhsnapfam271 / hhsnapfam171) #Rate within census tract
+data <- mutate(data, snap_rate1 = hhsnapfam2711mile / hh711mile) #Rate within 1 mile
+data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile) #Rate within 3 miles
+
+# Need county FIPS variable to focus analysis on Detroit metro area
+# We will create this variable in both our main data frame and the complete census data
+
+# Prepare to split census tract identifyer
+# Identify the variable types
+str(data$tract)
+str(data_census$tr10fips)
+# They are both character variables so we can continue with the subtr() function
+
+# Create variable with the county and tract fips number by removing the state FIPS number (first 2 digits))
+data <- mutate(data, tract_short = substr(tract, 3, 11)) #keep the 3rd through 11th digits
+data_census <- mutate(data_census, tract_short = substr(tr10fips, 3, 11)) #keep the 3rd through 11th digits
+
+# Create county FIPS code variable
+data <- mutate(data, county_fips = substr(tract, 3, 5)) #keep the 3rd through 5th digits
+data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5)) #keep the 3rd through 5th digits
+@
+
+\section{Program Offerings}\label{outline}
+
+Sections may use a label\footnote{In fact, you can have a label wherever you think a future reference to that content might be needed.}. This label is needed for referencing. For example the next section has label \emph{datas}, so you can reference it by writing: As we see in section \ref{datas}.
+
+<<>>=
+library(stargazer)
+stargazer(data$Meals,title = "Mean and Spread values", label = "measures")
+@
+
+
+\section{Data analysis}\label{datas}
+
+Here you can explain how to get the data:
+
+<<gettingData, echo=TRUE, eval=TRUE>>=
+states=read.csv("https://goo.gl/So48s5")
+@
+
+\subsection{Exploration}\label{eda}
+
+Here, I start exploring the data. The first step is to know what variables I have, and in what scale they are:
+
+<<verifying, echo=FALSE,eval=TRUE>>=
+str(states, width = 60, strict.width = "cut")
+@
+
+% bullets
+
+A next step demands:
+\begin{itemize}
+  \item Knowing the \emph{central} and \emph{dispersion} values.
+  \item Visualizing the variables of interest.
+\end{itemize}
+
+Except for the column \emph{state}, we can compute the centrality and spread measures for the other variables in the data. I will do that in Table \ref{measures} in the next page.
+
+<<meanspread,echo=FALSE,results=tex,eval=TRUE>>=
+# notice "results=tex"
+#install.packages("stargazer")
+library(stargazer)
+stargazer(states[,-c(1,8)],title = "Mean and Spread values", label = "measures")
+@
+
+As you saw, my Table \ref{measures} is nice. As you, saw the mean of the variable \emph{satMean} is \Sexpr{mean(states$satMean, na.rm = T)}. Now let's use a boxplot to explore location:
+
+%%%%%%%
+% figure 
+
+\begin{figure}[h]
+\centering
+<<location,echo=FALSE, fig=TRUE,eval=TRUE,height=4.6>>=
+# notice "fig=TRUE"
+par(mfrow=c(1,3))
+boxplot(states$satMean)
+boxplot(states$satDemand)
+boxplot(states$k12ExpenditurePupil)
+@
+\caption{Location of values}
+\label{plot_boxplots}
+\end{figure}
+
+
+As we have a categorical variable, we could create a frequency table:
+
+<<tableCat2,echo=FALSE, results=tex,eval=TRUE>>=
+tableF=data.frame(table(states$region),row.names = NULL)
+names(tableF)=c("Region", 'Frequency')
+stargazer(tableF,title = "Distribution of Region",  
+          label = "table_region",rownames=FALSE,summary = FALSE)
+@
+
+
+
+\subsection{Modeling}\label{model}
+
+Here, I propose that the amount of money spent for child per state in the US has an effect on the mean average pupils in a state get in SAT:
+<<reg1,echo=TRUE,eval=TRUE>>=
+reg1=lm(satMean~k12ExpenditurePupil, data = states)
+@
+
+Here, I modify the previous model; while I insist that the amount of money spent for child per state in the US has an effect on the mean average pupils in a state get in SAT; I will control the effect the demand per state (as demand were equal accross states). Then,
+
+Model 2: 
+<<reg2,echo=TRUE,eval=TRUE>>=
+reg2=lm(satMean~k12ExpenditurePupil+satDemand, data = states)
+@
+
+I have the results, but have not display them, let's do it in the coming subsection
+%%%%%%%
+%% better way coming here!!!!!
+
+\subsection{Modeling nicely}\label{modelnice}
+
+What about this:
+
+<<models2,results=tex, echo=false,eval=TRUE>>=
+stargazer(reg1,reg2,covariate.labels=c("Dollars per Student", "Share taking SAT"),title = "Regression Models", label = "regmods")
+@
+
+\clearpage
+
+\section{Explaining Citations}\label{citation}
+
+
+Citing requires a \emph{bib} file with all the books. You can create it from Zotero, and then add it here with the command \emph{cite}. For example, open the file named `GovernanceAnalytics' and write the name of the author here.
+
+
+\bibliographystyle{apacite} 
+\bibliography{GovernanceAnalytics} %you can change this 'bibfile' name.
+
+\end{document}
