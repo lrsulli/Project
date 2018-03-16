@@ -26,223 +26,141 @@ Food insecurity is an issue facing many households in the United States. It ofte
 \section{Data}\label{intro}
 The data for this report is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this report, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
 
-<<SurveyData, echo=FALSE, warning=FALSE, message=FALSE>>=
-# Load library
-# First time you need to install "readxl": install.packages("readxl")
-library(readxl)
-
-# Import initial survey responses from 2_15_13
-temp = tempfile(fileext = '.xlsx') #extension for Excel files
-dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/fp_survey_2_15_13.xlsx" #link to data
-download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
-
-data_initial = read_excel(temp, sheet = 1) #get data
-
-# Recode file for Q12 and Q22 to Q25
-temp = tempfile(fileext = '.xlsx') #extension for Excel fie
-dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/recode_Q12_Q22toQ25.xlsx" #link to data
-download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
-
-data_recode = read_excel(temp, sheet = 1) #get data
-
-# Address list data file
-temp = tempfile(fileext = '.xlsx') #extension for Excel fie
-dataURL <- "https://github.com/lrsulli/Project/raw/master/Data/address_list_5_20_13.xlsx" #link to data
-download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
-
-data_address = read_excel(temp, sheet = 1) #get data
-
-# Prepare recode file
-names(data_recode) #Check names and see what the identifyer variable is called
-
-# We don't need all of these varaibles so we will only keep the necessary ones:
-data_recode = data_recode[,c(1,5:6,14:15,19:20)] #only keep necessary variables
-
-# Rename the identifyer variable so it matches the initial data set to keep things simplier:
-names(data_recode)[1] <- "STUDYID" #rename to match initial data set
-
-# Merge recode file with initial data set
-data = merge(data_initial, data_recode, by="STUDYID")
-
-# Prepare address list file
-names(data_address)[1] <- "STUDYID" #rename to match inital data set
-
-# Merge address list with initial data set and recodes
-data = merge(data, data_address, by="STUDYID")
-
-data = data.frame(data) #convert to data frame
-@
-
-<<CensusData, echo=FALSE, warning=FALSE, message=FALSE>>=
-# Load library
-# Make sure this package is installed the first time you run the code
-library(readstata13)
-
-# Import first of three census data files
-temp = tempfile(fileext = '.dta') #extension for Stata data file
-dataURL <- "https://github.com/lrsulli/Project/raw/master/Population_Data%204_7_17.dta" #link to data
-download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
-
-data_census1 = read.dta13(temp) #get data
-
-# Import second of three census data files
-temp = tempfile(fileext = '.dta') #extension for Stata data file
-dataURL <- "https://github.com/lrsulli/Project/raw/master/Census_Data%204_28_17.dta" #link to data
-download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
-
-data_census2 = read.dta13(temp) #get data
-
-# Import third of three census data files
-temp = tempfile(fileext = '.dta') #extension for Stata data file
-dataURL<-"https://github.com/lrsulli/Project/raw/master/tract10detroit_povertypop_123mile.dta" #link to data
-download.file(dataURL, destfile = temp, mode = 'wb') #temporarily download file
-
-data_census3 = read.dta13(temp) #get data
-
-# Merge first two census data files (Census1 and Census2)
-data_census = merge(data_census1, data_census2, by="tr10fips", all=T) #keep all tracts
-
-# Merge third census data file (Census3 with Census1 and Census2)
-data_census = merge(data_census, data_census3, by="tr10fips", all=T) #keep all tracts
-
-data_census = data.frame(data_census) #convert to data frame
-
-data = merge(data, data_census, by='STUDYID') #only keep tracts that have organizations
-
-data = data.frame(data) #convert to data frame
-@
-
-<<CleanData, echo=FALSE, warning=FALSE, message=FALSE>>=
-# Create a copy of original data set
-data_copy = data
-
-# Only keep necessary variables
-data = data_copy[,c('tr10fips','STUDYID','Q5','Q6_1','Q6_2','Q6_3','Q6_4','Q6_5','Q7','Q8_1','Q8_2','Q8_3','Q8_4','Q8_5','Q8_6','Q8_7','Q8_8','Q9','Q10_1','Q10_2','Q10_3','Q10_4','Q10_5','Q14','Q15_1','Q15_2','Q15_3','Q15_4','Q15_5','Q15_6','Q15_7','Q15_8','Q15_9','Q15_10','Q15_11','Q15_12','Q15_13','Q12RC','Street.Address','City','State','Zip','County','povpop10071','povpopd71','povpop_1m',"povpopd711mile","povpop_3m","povpopd713mile","nhwht71","pop71","nhwht711mile","nhwht713mile","blk71","blk711mile","blk713mile","hsp71","hsp711mile","hsp713mile","hhsnapfam271","hhsnapfam171","hhsnapfam2711mile","hh711mile","hhsnapfam2713mile","hh713mile")]
-
-# Check variable names of data
-names(data)
-
-# Rename identification variables
-names(data)[1] <- "tract"
-names(data)[2] <- "id"
-
-# Rename types of meal programs
-names(data)[3] <- "meals"
-names(data)[4] <- "hot_meals"
-names(data)[5] <- "home_meals" #Home delivered meals
-names(data)[6] <- "community_kitchen"
-names(data)[7] <- "child_meals"
-names(data)[8] <- "meal_other" #Offer other types of meal programs
-
-# Rename types of grocery programs
-names(data)[9] <- "groceries"
-names(data)[10] <- "pantry"
-names(data)[11] <- "backpack"
-names(data)[12] <- "home_groceries" #Home delivered groceries
-names(data)[13] <- "mobile_pantry"
-names(data)[14] <- "mobile_market"
-names(data)[15] <- "supply_other" #Supply food to other programs
-names(data)[16] <- "community_garden"
-names(data)[17] <- "groceries_other" #Offer other types of grocery programs
-
-# Rename types of food related benefit programs
-names(data)[18] <- "food_ben" #Offers food-related benefits
-names(data)[19] <- "snap"
-names(data)[20] <- "wic"
-names(data)[21] <- "school" #School lunch or breakfast
-names(data)[22] <- "gift" #Gift card or voucher
-names(data)[23] <- "food_ben_other" #Offer other types of food-related benefits
-
-# Rename types of non-food related benefit programs
-names(data)[24] <- "nonfood_ben" #Offers non-food related benefits
-names(data)[25] <- "job" #Job training or assistance
-names(data)[26] <- "house" #Housing assistance
-names(data)[27] <- "utility"
-names(data)[28] <- "legal"
-names(data)[29] <- "educ" #GED or education assistance
-names(data)[30] <- "health"
-names(data)[31] <- "counseling"
-names(data)[32] <- "trans" #Transportation assistance
-names(data)[33] <- "cloth" #Clothing or furniture
-names(data)[34] <- "ref" #Referrals to other programs
-names(data)[35] <- "medicaid" #Medicaid or CHIP
-names(data)[36] <- "money" #Financial, tax prep, budgeting
-names(data)[37] <- "nonfood_ben_other" #Offer other types of non-food related benefits
-
-# Rename number of clients served per month
-names(data)[38] <- "clients"
-
-# Load library
-# Make sure this package is installed the first time you run the code
-library(dplyr)
-
-# Check for missing poverty demographic variables
-sum(is.na(data_census$povpop10071)) #there are 962 missing values
-
-# Will use poverty rate within 1 mile for missing within tract poverty rates
-data_census$povpop10071[is.na(data_census$povpop10071)] <- 0 #Convert NA's to 0's
-
-data_census <- mutate(data_census, pov_rateT = ifelse(povpop10071==0, povpop100711mile / povpopd711mile, povpop10071 / povpopd71)) #Replace missing values with the correct rate
-
-# Generate poverty rate variables
-data <- mutate(data, pov_rateT = povpop10071 / povpopd71) #Rate within census tract
-data <- mutate(data, pov_rate1 = povpop_1m / povpopd711mile) #Rate within 1 mile
-data <- mutate(data, pov_rate3 = povpop_3m / povpopd713mile) #Rate within 3 miles
-
-# Generate White demographic variables
-data <- mutate(data, white_rateT = nhwht71 / pop71) #Rate within census tract
-data <- mutate(data, white_rate1 = nhwht711mile / povpopd711mile) #Rate within 1 mile
-data <- mutate(data, white_rate3 = nhwht713mile / povpopd713mile) #Rate within 3 miles
-
-# Gnerate Black demographic variables
-data <- mutate(data, black_rateT = blk71 / pop71) #Rate within census tract
-data <- mutate(data, black_rate1 = blk711mile / povpopd711mile) #Rate within 1 mile
-data <- mutate(data, black_rate3 = blk713mile / povpopd713mile) #Rate within 3 miles
-
-# Generate Hispanic demographic variables
-data <- mutate(data, hisp_rateT = hsp71 / pop71) #Rate within census tract
-data <- mutate(data, hisp_rate1 = hsp711mile / povpopd711mile) #Rate within 1 mile
-data <- mutate(data, hisp_rate3 = hsp713mile / povpopd713mile) #Rate within 3 miles
-
-# Generate SNAP rates
-data <- mutate(data, snap_rateT = hhsnapfam271 / hhsnapfam171) #Rate within census tract
-data <- mutate(data, snap_rate1 = hhsnapfam2711mile / hh711mile) #Rate within 1 mile
-data <- mutate(data, snap_rate3 = hhsnapfam2713mile / hh713mile) #Rate within 3 miles
-
-# Need county FIPS variable to focus analysis on Detroit metro area
-# We will create this variable in both our main data frame and the complete census data
-
-# Prepare to split census tract identifyer
-# Identify the variable types
-str(data$tract)
-str(data_census$tr10fips)
-# They are both character variables so we can continue with the subtr() function
-
-# Create variable with the county and tract fips number by removing the state FIPS number (first 2 digits))
-data <- mutate(data, tract_short = substr(tract, 3, 11)) #keep the 3rd through 11th digits
-data_census <- mutate(data_census, tract_short = substr(tr10fips, 3, 11)) #keep the 3rd through 11th digits
-
-# Create county FIPS code variable
-data <- mutate(data, county_fips = substr(tract, 3, 5)) #keep the 3rd through 5th digits
-data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5)) #keep the 3rd through 5th digits
+<<gettingData, echo=FALSE, warning=FALSE, message=FALSE>>=
+survey_data=read.csv("https://github.com/lrsulli/Project/raw/master/data.csv")
 @
 
 \section{Program Offerings}\label{outline}
 
 Sections may use a label\footnote{In fact, you can have a label wherever you think a future reference to that content might be needed.}. This label is needed for referencing. For example the next section has label \emph{datas}, so you can reference it by writing: As we see in section \ref{datas}.
 
-<<>>=
+\subsection{Meal Programs}\label{eda}
+
+Meal programs include the following services: hot meals, home delivered meals, community kitchens, and meals for children. These results show us that 74 food providers, or 30.3 percent of those surveyed, offer meal programs to their client (Table 1). On the other hand, a majority or 69.7 percent representing 170 organizations, do not offer meal programs.
+
+<<MealTable, echo=FALSE, results=tex, warning=FALSE, message=FALSE>>=
 library(stargazer)
-stargazer(data$Meals,title = "Mean and Spread values", label = "measures")
+
+tableF=data.frame(table(survey_data$meals),row.names = NULL)
+names(tableF)=c("Offers Meal Program", 'Frequency')
+stargazer(tableF,title = "Distribution of Meal Programs",  
+          label = "table_region",rownames=FALSE,summary = FALSE, type = 'latex')
 @
 
+\subsection{Grocery Programs}\label{eda}
 
-\section{Data analysis}\label{datas}
+Grocery programs include the following services: food pantries, backpack programs, home delivered groceries, mobile pantries or markets, supplying food to other programs, or community gardens. This analysis tells us that grocery programs are more prevalent than meal programs. This trend is seen through 91.0 percent, or 222 organizations, offering grocery programs compared to just 30.3 percent offering meal programs.
+
+<<GroceryTable, echo=FALSE, results=tex, warning=FALSE, message=FALSE>>=
+library(stargazer)
+
+tableF=data.frame(table(survey_data$groceries),row.names = NULL)
+names(tableF)=c("Offers Grocery Program", 'Frequency')
+stargazer(tableF,title = "Distribution of Grocery Programs",  
+          label = "table_region",rownames=FALSE,summary = FALSE, type = 'latex')
+@
+
+\subsection{Food Related Benefits}\label{eda}
+
+Food related benefits include the following services: Supplemental Nutrition Assistance Program (SNAP), Women, Infant, and Children (WIC), school lunch or breakfast, and gift cards or vouchers. We can see that about half, or 49.2 percent, of surveyed organizations offer food related benefits to their clients.
+
+<<FoodBenTable, echo=FALSE, results=tex, warning=FALSE, message=FALSE>>=
+library(stargazer)
+
+tableF=data.frame(table(survey_data$food_ben),row.names = NULL)
+names(tableF)=c("Offers Food Related Benefit Program", 'Frequency')
+stargazer(tableF,title = "Distribution of Food Related Benefit Programs",  
+          label = "table_region",rownames=FALSE,summary = FALSE, type = 'latex')
+@
+
+\subsection{Non-Food Related Benefits}\label{eda}
+
+Non-food related benefits include the following services: job training, housing assistance, utility assistance, legal assistance, GED or other education programs, healthcare, counseling, transportation services, clothing or furniture, referrals to other programs, Medicaid or CHIP, and financial assistance. This part of the analysis shows us the high prevalence of non-food related benefits within the emergency food assistance network, suggesting the potentially larger role these organizations play in the social safety net. 76.2 percent of surveyed organizations provide some form of non-food related benefits, while only 23.4 percent did not provide any of these types of services, and 0.4 percent (or 1 pantry) did not know or refused to answer the question.
+
+<<NonFoodBenTable, echo=FALSE, results=tex, warning=FALSE, message=FALSE>>=
+library(stargazer)
+
+tableF=data.frame(table(survey_data$nonfood_ben),row.names = NULL)
+names(tableF)=c("Offers Non-Food Related Benefit Program", 'Frequency')
+stargazer(tableF,title = "Distribution of Non-Food Related Benefit Programs",  
+          label = "table_region",rownames=FALSE,summary = FALSE, type = 'latex')
+@
+
+\section{Spatial Mismatch Theory}\label{datas}
 
 Here you can explain how to get the data:
 
-<<gettingData, echo=TRUE, eval=TRUE>>=
-states=read.csv("https://goo.gl/So48s5")
+<<MapData, echo=FALSE, warning=FALSE, message=FALSE>>=
+addresses=read.csv("https://github.com/lrsulli/Project/raw/master/geocoded_addresses.csv")
+
+# Link to map
+compressedMap= "https://github.com/lrsulli/Project/raw/master/map/2010_Census_Tracts_v17a.zip"
+
+# Unzip compressed map folder
+temp=tempfile()
+download.file(compressedMap, temp)
+unzip(temp)
+
+# Determine which shapefiles are in folder
+(maps = list.files(pattern = 'shp'))
+
+# Load library
+library(rgdal)
+
+# Select the map
+tractMap <- readOGR("2010_Census_Tracts_v17a.shp", stringsAsFactors=F)
+
+# Change LINK (FIPS code) variable into an interger
+tractMap$NAME=as.numeric(tractMap$LINK)
+
+# Keep Wayne, Macomb, Oakland, and Washtenaw Counties (FIPS = 163, 099, 125, and 161)
+map_counties = subset(tractMap, CNTY_CODE=='163' | CNTY_CODE=='099' | CNTY_CODE=='125' | CNTY_CODE=='161')
+
+# We only need one observation per census tract
+data_counties = data_census[!duplicated(data_census[c('tract_short')]),] #drop duplicate tracts
+
+# Merge map data with census data
+map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short', all.x=F)
+@
+
+<<NonFoodBenTable, echo=FALSE, results=tex, warning=FALSE, message=FALSE>>=
+# Want to plot within tract poverty rate
+varToPLot=map_counties$pov_rateT
+
+library(RColorBrewer)
+library(classInt)
+
+# Number of intervals
+numberOfClasses = 5 
+
+# Color pallete
+colorForScale='YlGnBu'
+colors = brewer.pal(numberOfClasses, colorForScale)
+
+intervals <- classIntervals(varToPLot, numberOfClasses, 
+                            style = "quantile",
+                            dataPrecision=2)
+colorPallette <- findColours(intervals, colors)
+
+#Plot characteristics
+legendText="Poverty Rate" #legend title
+shrinkLegend=0.8 #legend size
+title="Poverty Rate by Census Tract"
+shrinkPoints=0.35 #point size
+
+plot(map_counties, col = 'grey') #plot background map (tracts without pantries)
+plot(map_counties, col = colorPallette, main=title,border='black',add=T) #plot poverty rates
+
+title(main=title)
+
+legend('topright', #location of legend
+       fill = attr(colorPallette, "palette"), 
+       cex = shrinkLegend, 
+       bty = "n",
+       title=legendText,
+       legend = c("0% - 6%", "6% - 11%", "11% - 18%", "18% - 35%", "35% - 100%")) #legend text
+
+points(map_address$lon, map_address$lat, col = "red", pch =19, cex = shrinkPoints) #add organization locations
 @
 
 \subsection{Exploration}\label{eda}

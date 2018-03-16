@@ -27,74 +27,100 @@ Food insecurity is an issue facing many households in the United States. It ofte
 \section{Data}\label{intro}
 The data for this report is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this report, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
 
-\begin{Schunk}
-\begin{Soutput}
- [1] "ID Number"                                                                                                              
- [2] "Q12 - About how many unique individual clients did you serve in your food assistance programs in the most recent month?"
- [3] "Q12 Detail"                                                                                                             
- [4] "Q12 Don't Know/Refuse"                                                                                                  
- [5] "Q12RC"                                                                                                                  
- [6] "Q12RC Notes/Questions"                                                                                                  
- [7] "Q22 - Do you have any paid staff at your site (including yourself)?"                                                    
- [8] "Q23 - How many paid full-time staff?  (Number)"                                                                         
- [9] "Q23 Detail"                                                                                                             
-[10] "Q23 Don't Know/Refuse"                                                                                                  
-[11] "Q24 - How many paid part-time staff?  (Number)"                                                                         
-[12] "Q24 Detail"                                                                                                             
-[13] "Q24 Don't Know/Refuse"                                                                                                  
-[14] "Q22RC"                                                                                                                  
-[15] "Q22RC Notes/Questions"                                                                                                  
-[16] "Q25 - How many volunteer hours support this program in an average week? (Number)"                                       
-[17] "Q25 Detail"                                                                                                             
-[18] "Q25 Don't Know/Refuse"                                                                                                  
-[19] "Q25RC"                                                                                                                  
-[20] "Q25RC Notes/Questions"                                                                                                  
-[21] "Initial Attempt at Q25RC"                                                                                               
-\end{Soutput}
-\end{Schunk}
-
-
-\begin{Schunk}
-\begin{Soutput}
- [1] "tr10fips"          "STUDYID"           "Q5"               
- [4] "Q6_1"              "Q6_2"              "Q6_3"             
- [7] "Q6_4"              "Q6_5"              "Q7"               
-[10] "Q8_1"              "Q8_2"              "Q8_3"             
-[13] "Q8_4"              "Q8_5"              "Q8_6"             
-[16] "Q8_7"              "Q8_8"              "Q9"               
-[19] "Q10_1"             "Q10_2"             "Q10_3"            
-[22] "Q10_4"             "Q10_5"             "Q14"              
-[25] "Q15_1"             "Q15_2"             "Q15_3"            
-[28] "Q15_4"             "Q15_5"             "Q15_6"            
-[31] "Q15_7"             "Q15_8"             "Q15_9"            
-[34] "Q15_10"            "Q15_11"            "Q15_12"           
-[37] "Q15_13"            "Q12RC"             "Street.Address"   
-[40] "City"              "State"             "Zip"              
-[43] "County"            "povpop10071"       "povpopd71"        
-[46] "povpop_1m"         "povpopd711mile"    "povpop_3m"        
-[49] "povpopd713mile"    "nhwht71"           "pop71"            
-[52] "nhwht711mile"      "nhwht713mile"      "blk71"            
-[55] "blk711mile"        "blk713mile"        "hsp71"            
-[58] "hsp711mile"        "hsp713mile"        "hhsnapfam271"     
-[61] "hhsnapfam171"      "hhsnapfam2711mile" "hh711mile"        
-[64] "hhsnapfam2713mile" "hh713mile"        
-\end{Soutput}
-\begin{Soutput}
-[1] 962
-\end{Soutput}
-\begin{Soutput}
- chr [1:244] "26163530100" "26163530800" "26163516800" ...
-\end{Soutput}
-\begin{Soutput}
- chr [1:1206] "26099206700" "26099206700" "26099210000" ...
-\end{Soutput}
-\end{Schunk}
 
 \section{Program Offerings}\label{outline}
 
 Sections may use a label\footnote{In fact, you can have a label wherever you think a future reference to that content might be needed.}. This label is needed for referencing. For example the next section has label \emph{datas}, so you can reference it by writing: As we see in section \ref{datas}.
 
+\subsection{Meal Programs}\label{eda}
+
+Meal programs include the following services: hot meals, home delivered meals, community kitchens, and meals for children. These results show us that 74 food providers, or 30.3 percent of those surveyed, offer meal programs to their client (Table 1). On the other hand, a majority or 69.7 percent representing 170 organizations, do not offer meal programs.
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Thu, Mar 15, 2018 - 20:45:13
+\begin{table}[!htbp] \centering 
+  \caption{Distribution of Meal Programs} 
+  \label{table_region} 
+\begin{tabular}{@{\extracolsep{5pt}} cc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+Offers Meal Program & Frequency \\ 
+\hline \\[-1.8ex] 
+No & $170$ \\ 
+Yes & $74$ \\ 
+\hline \\[-1.8ex] 
+\end{tabular} 
+\end{table} 
+\subsection{Grocery Programs}\label{eda}
+
+Grocery programs include the following services: food pantries, backpack programs, home delivered groceries, mobile pantries or markets, supplying food to other programs, or community gardens. This analysis tells us that grocery programs are more prevalent than meal programs. This trend is seen through 91.0 percent, or 222 organizations, offering grocery programs compared to just 30.3 percent offering meal programs.
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Thu, Mar 15, 2018 - 20:45:13
+\begin{table}[!htbp] \centering 
+  \caption{Distribution of Grocery Programs} 
+  \label{table_region} 
+\begin{tabular}{@{\extracolsep{5pt}} cc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+Offers Grocery Program & Frequency \\ 
+\hline \\[-1.8ex] 
+No & $22$ \\ 
+Yes & $222$ \\ 
+\hline \\[-1.8ex] 
+\end{tabular} 
+\end{table} 
+\subsection{Food Related Benefits}\label{eda}
+
+Food related benefits include the following services: Supplemental Nutrition Assistance Program (SNAP), Women, Infant, and Children (WIC), school lunch or breakfast, and gift cards or vouchers. We can see that about half, or 49.2 percent, of surveyed organizations offer food related benefits to their clients.
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Thu, Mar 15, 2018 - 20:45:13
+\begin{table}[!htbp] \centering 
+  \caption{Distribution of Food Related Benefit Programs} 
+  \label{table_region} 
+\begin{tabular}{@{\extracolsep{5pt}} cc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+Offers Food Related Benefit Program & Frequency \\ 
+\hline \\[-1.8ex] 
+No & $124$ \\ 
+Yes & $120$ \\ 
+\hline \\[-1.8ex] 
+\end{tabular} 
+\end{table} 
+\subsection{Non-Food Related Benefits}\label{eda}
+
+Non-food related benefits include the following services: job training, housing assistance, utility assistance, legal assistance, GED or other education programs, healthcare, counseling, transportation services, clothing or furniture, referrals to other programs, Medicaid or CHIP, and financial assistance. This part of the analysis shows us the high prevalence of non-food related benefits within the emergency food assistance network, suggesting the potentially larger role these organizations play in the social safety net. 76.2 percent of surveyed organizations provide some form of non-food related benefits, while only 23.4 percent did not provide any of these types of services, and 0.4 percent (or 1 pantry) did not know or refused to answer the question.
+
+% Table created by stargazer v.5.2 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
+% Date and time: Thu, Mar 15, 2018 - 20:45:13
+\begin{table}[!htbp] \centering 
+  \caption{Distribution of Non-Food Related Benefit Programs} 
+  \label{table_region} 
+\begin{tabular}{@{\extracolsep{5pt}} cc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+Offers Non-Food Related Benefit Program & Frequency \\ 
+\hline \\[-1.8ex] 
+DK/Refuse & $1$ \\ 
+No & $57$ \\ 
+Yes & $186$ \\ 
+\hline \\[-1.8ex] 
+\end{tabular} 
+\end{table} 
+\section{Spatial Mismatch Theory}\label{datas}
+
+Here you can explain how to get the data:
+
 \begin{Schunk}
-\begin{Sinput}
-> library(stargazer)
-> stargazer(data$Meals,title = "Mean and Spread values", label = "measures")
+\begin{Soutput}
+[1] "2010_Census_Tracts_v17a.shp"
+\end{Soutput}
+\begin{Soutput}
+OGR data source with driver: ESRI Shapefile 
+Source: "2010_Census_Tracts_v17a.shp", layer: "2010_Census_Tracts_v17a"
+with 2773 features
+It has 14 fields
+Integer64 fields read as strings:  OBJECTID 
+\end{Soutput}
