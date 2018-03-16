@@ -8,11 +8,11 @@ last updated: 3/15/18
 This tutorial will lead you through the steps of cleaning and analyzing survey data in R. This analysis is a part of a larger research project examining the organizing structure and capacity of food pantries. You will find instructions both in the text before each code chunk as well as in comment form within the chunks.
   
 #####About the Data  
-The data used for this tutuorial is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
+The data used for this tutorial is from a survey of emergency food assistance providers in the Detroit Metropolitan area from 2012 and 2013. The data was collected at the University of Chicago by a trained interviewer who administered the surveys either by phone or via an online survey tool. Survey questions asked about the organizational characteristics of each agency such as the hours of operation, types of programs offered, and staffing structure. We will also use population data from the American Community Survey from 2010-2014. For the purpose of this tutorial, our analysis will focus on a subset of this data with variables describing the types of programs offered, geographic location, and demographic characteristics.
 
 ####Step 1: Create Dataset
 
-The survey data comes in three different Excel files: inital responses from 2/15/13, recoded questions, and addresses. We need to import each of these indvidually and then merge them together. All of the raw data files are stored on Github and we will temporarily download them for our analysis.
+The survey data comes in three different Excel files: initial responses from 2/15/13, recoded questions, and addresses. We need to import each of these individually and then merge them together. All of the raw data files are stored on Github and we will temporarily download them for our analysis.
 
 #####Import Survey Data
 
@@ -57,9 +57,9 @@ data_address = read_excel(temp, sheet = 1) #get data
 
 #####Merge Survey Data
 
-Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a unique "STUDYID" was given to each provider when they were surveyed. We will merge using this identifyer. We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simplier.  
+Now that we have each Excel file in a data frame we need to merge them into one data frame for our analysis. To do this we need to have a common variable in each data frame, in this case a unique "STUDYID" was given to each provider when they were surveyed. We will merge using this identifier. We will also prepare each data frame for merging by renaming variables where necessary and only keeping a subset of the variables to keep things simpler.  
 
-First, we will merge the intial survey responses with the recode file:
+First, we will merge the initial survey responses with the recode file:
 
 ```{r Merge Data: Recodes, warning=FALSE, message=FALSE}
 # Prepare recode file
@@ -89,7 +89,7 @@ data = data.frame(data) #convert to data frame
 
 #####Import Census Data
 
-We now need to import the Census data so we can analyze the demographics of the populations that the providers serve. This data comes in Stata, or .dta, files which are also stored in Github. We import them the same way as the survey data, just with a different extension. Again, we will temporairly dowload each file and store them separately in different data frames.  
+We now need to import the Census data so we can analyze the demographics of the populations that the providers serve. This data comes in Stata, or .dta, files which are also stored in Github. We import them the same way as the survey data, just with a different extension. Again, we will temporarily download each file and store them separately in different data frames.  
 
 ```{r Import Data: Census 1, warning=FALSE, message=FALSE}
 # Load library
@@ -293,17 +293,23 @@ data <- mutate(data, county_fips = substr(tract, 3, 5)) #keep the 3rd through 5t
 data_census <- mutate(data_census, county_fips = substr(tr10fips, 3, 5)) #keep the 3rd through 5th digits
 ```
 
+```{r Save, warning=FALSE, message=FALSE}
+# Save a copy of the data in csv format
+write.csv(data, "data.csv") #saved to Github repo
+```
+
+
 ####Step 2: Explore the Data
 
-Now that we have our data how we want it, let's do some basic analysis. We will look at the dichotomous and continuous variables seperately.
+Now that we have our data how we want it, let's do some basic analysis. We will look at the dichotomous and continuous variables separately.
 
 #####Explore Dichotomous Variables
 
-We want to determine the prevelance of each type of program or how many food providers offer each major type of program. These variables have simple dichotomous, yes/no, responses. We will use basic functions within R to calculate the statistics and a package called "pander" to format our tables.  
+We want to determine the prevalence of each type of program or how many food providers offer each major type of program. These variables have simple dichotomous, yes/no, responses. We will use basic functions within R to calculate the statistics and a package called "pander" to format our tables.  
 
 #####Meal Programs
 
-Meal programs include the following services: hot meals, hom delivered meals, community kitchens, and meals for children.  
+Meal programs include the following services: hot meals, home delivered meals, community kitchens, and meals for children.  
 
 First, the distribution of meal programs:
 
@@ -330,9 +336,9 @@ These results show us that 74 food providers, or 30.3% of those surveyed, offer 
 
 #####Grocery Programs
 
-Grocery programs include the following services: food pantries, backpack programs, home delivered groceries, mobile pantries or markets, suppling food to other programs, or community gardens.  
+Grocery programs include the following services: food pantries, backpack programs, home delivered groceries, mobile pantries or markets, supplying food to other programs, or community gardens.  
 
-The ditribution of grocery programs is:
+The distribution of grocery programs is:
 
 ```{r Groceries: Distribution, warning=FALSE, message=FALSE}
 # Load library
@@ -352,7 +358,7 @@ library(pander)
 pander((prop.table(table(data$groceries)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering grocery programs.", digits = 3)
 ```
 
-This analysis tells us that grocery programs are more prevelant than meal programs. This trend is seen through 91.0%, or 222 organizations, offering grocery programs compared to just 30.3% offering meal programs.
+This analysis tells us that grocery programs are more prevalent than meal programs. This trend is seen through 91.0%, or 222 organizations, offering grocery programs compared to just 30.3% offering meal programs.
 
 #####Food Related Benefits
 
@@ -382,7 +388,7 @@ We can see that about half, or 49.2%, of surveyed organizations offer food relat
 
 #####Non-Food Related Benefits
 
-Non-food related benefits include the following serivces: job training, houing assistance, utility assistance, legal assistance, GED or other education programs, healthcare, counseling, transportation services, clothing or furniture, referrals to other programs, Medicaid or CHIP, and financial assistance.  
+Non-food related benefits include the following services: job training, housing assistance, utility assistance, legal assistance, GED or other education programs, healthcare, counseling, transportation services, clothing or furniture, referrals to other programs, Medicaid or CHIP, and financial assistance.  
 
 Here is the basic distribution of non-food related benefits:
 
@@ -404,7 +410,7 @@ library(pander)
 pander((prop.table(table(data$nonfood_ben)))*100, stlye = 'rmarkdown', caption = "Percent of food pantries offering non-food related benefits.", digits = 3)
 ```
 
-This part of the analysis shows us the high prevlance of non-food realted benefits within the emergency food assistance network, suggesting the potentially larger role these organizations play in the social safety net. 76.2% of surveyed organizations provide some form of non-food related benefits, while only 23.4% did not provide any of these types of services, and 0.4% (or 1 pantry) did not know or refused to answer the question.
+This part of the analysis shows us the high prevalence of non-food related benefits within the emergency food assistance network, suggesting the potentially larger role these organizations play in the social safety net. 76.2% of surveyed organizations provide some form of non-food related benefits, while only 23.4% did not provide any of these types of services, and 0.4% (or 1 pantry) did not know or refused to answer the question.
 
 #####Explore Countinuous Variables
 
@@ -442,7 +448,7 @@ ggplot(data, aes(x=data$clients)) +
 
 ####Step 3: Map the Data
 
-Our main analysis will be examining spatial mismatch theory in light of our survey results. Spatial mismatch theory is often applied to access to employment, but can also be used to explore access to assistance and other resources. In general, the theory states that one cause of poverty is that resources (or employment, assistance, etc.) are not located in areas where low-income individuals live. To explore this theory, we will plot a map of poverty rates and the location of the food providers. In order to best help those in need, idealy these organizations will be located in the communities with the highest pvoerty rates.  
+Our main analysis will be examining spatial mismatch theory in light of our survey results. Spatial mismatch theory is often applied to access to employment, but can also be used to explore access to assistance and other resources. In general, the theory states that one cause of poverty is that resources (or employment, assistance, etc.) are not located in areas where low-income individuals live. To explore this theory, we will plot a map of poverty rates and the location of the food providers. In order to best help those in need, ideally these organizations will be located in the communities with the highest poverty rates.  
 
 In order to complete this analysis we will create a map using a shapefile, geocode the food pantry locations, and create a final map overlaying the two.  
 
@@ -509,6 +515,9 @@ data_counties = data_census[!duplicated(data_census[c('tract_short')]),] #drop d
 
 # Merge map data with census data
 map_counties = merge(map_counties, data_counties, by.x='LINK', by.y='tract_short', all.x=F)
+
+# Save a copy of the data in csv format
+write.csv(map_counties, "map_counties.csv") #saved to Github repo
 ```
 
 Let's check to see that we have the correct area:
@@ -518,9 +527,9 @@ Let's check to see that we have the correct area:
 plot(map_counties, col='black')
 ```
 
-Now we will geocode the organization locations using the addresses provided. We will do this using code from https://qanda.science/r/3956223_batch-geocoding-with-googleway-r-how-to.jsp and the googleway package. You will need to get a Google API key before compelting this step. All directions can be found at the link provided.  
+Now we will geocode the organization locations using the addresses provided. We will do this using code from https://qanda.science/r/3956223_batch-geocoding-with-googleway-r-how-to.jsp and the googleway package. You will need to get a Google API key before completing this step. All directions can be found at the link provided.  
 
-First, we have to make sure that our address variable is formated correctly. Then, we will geocode the addresses which will return the latitude and longitude coordiantes that will need to be formatted into their own variables. Geocoding takes a long time so after compeleting this step once I recommend writing the output to a csv file, with the STUDYID's, and then working from that csv file. We can then turn the code chunk off so it will not run when we knit the document by adding "eval=FALSE" to the beginning of the chunk.
+First, we have to make sure that our address variable is formatted correctly. Then, we will geocode the addresses which will return the latitude and longitude coordinates that will need to be formatted into their own variables. Geocoding takes a long time so after completing this step once I recommend writing the output to a csv file, with the STUDYID's, and then working from that csv file. We can then turn the code chunk off so it will not run when we knit the document by adding "eval=FALSE" to the beginning of the chunk.
 
 ```{r Geocoding, eval=FALSE, warning=FALSE, message=FALSE}
 # Only ran once because it takes awhile, wrote into an .csv file and put in Github repo
@@ -585,7 +594,7 @@ No we can get the map specifications. First, we want to plot the within tract po
 varToPLot=map_counties$pov_rateT
 ```
 
-Then we can set the intervals and color sheme for the color ramp for the poverty rates:
+Then we can set the intervals and color scheme for the color ramp for the poverty rates:
 
 ```{r Plot Characteristics, warning=FALSE, message=FALSE}
 # Load librarys
